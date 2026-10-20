@@ -6,11 +6,11 @@ import Footer from "./components/Footer";
 
 // Import pages
 import Home from "./pages/Home/Home";
+import About from "./pages/About/About";
 import Booking from "./pages/Booking";
-// import About from "./pages/About";
-// import Services from "./pages/Services";
-// import Vehicles from "./pages/Vehicles";
-// import Contact from "./pages/Contact";
+import Services from "./pages/Services/Services";
+import Vehicles from "./pages/Vehicles/Vehicles";
+import Contact from "./pages/Contact/Contact";
 // import Booking from "./pages/Booking";
 // import PrivacyPolicy from "./pages/PrivacyPolicy";
 // import TermsAndConditions from "./pages/TermsAndConditions";
@@ -27,11 +27,11 @@ export default function App() {
 
           <Route path="/booking" element={<Booking />} />
 
-          {/* <Route path="/about" element={<About />} />
+          <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/vehicles" element={<Vehicles />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/booking" element={<Booking />} /> */}
+          {/* <Route path="/booking" element={<Booking />} /> */}
 
           {/* Legal pages */}
           {/* <Route
