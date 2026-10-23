@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import vehicleHero from "../../assets/maxicab-1.jpg";
+import vehicleHero from "../../assets/maxicab-6.jpg";
 
 const fleetSummary = [
   { quantity: "05", label: "4-Seater Cabs" },

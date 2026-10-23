@@ -27,7 +27,7 @@ const serviceLinks = [
   "Group Travel",
 ];
 
-const PHONE_NUMBER = "+65XXXXXXXX";
+const PHONE_NUMBER = "+6598669334";
 const WHATSAPP_NUMBER = "65XXXXXXXX";
 const EMAIL = "info@yourdomain.com";
 
@@ -229,10 +229,10 @@ export default function Footer() {
                 </span>
                 <div className="min-w-0 pt-1">
                   <p className="text-sm font-medium text-[#F8F4EE]">
-                    Service Area
+                    169, Mackenize Road
                   </p>
                   <p className="mt-1 text-sm leading-6 text-white/50">
-                    Singapore
+                    Singapore 228727
                   </p>
                 </div>
               </li>

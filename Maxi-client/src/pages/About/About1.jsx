@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import aboutHero from "../../assets/maxicab-1.jpg";
+import aboutHero from "../../assets/maxicab-8.jpg";
 
 export default function About1() {
   const reduceMotion = useReducedMotion();

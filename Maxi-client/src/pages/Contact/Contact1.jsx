@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import contactHero from "../../assets/maxicab-1.jpg";
+import contactHero from "../../assets/maxicab-7.jpg";
 
 export default function Contact1() {
   const reduceMotion = useReducedMotion();

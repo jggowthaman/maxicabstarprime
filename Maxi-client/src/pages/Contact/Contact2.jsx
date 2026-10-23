@@ -13,13 +13,14 @@ import {
 } from "lucide-react";
 
 const BUSINESS_EMAIL = "info@yourdomain.com";
-const BUSINESS_PHONE = "+65 XXXX XXXX";
+const BUSINESS_PHONE = "+65 9866 9334";
 
-// Demo map only. Replace with the client's actual location.
+
 const MAP_EMBED_URL =
-  "https://maps.google.com/maps?q=Singapore&t=&z=11&ie=UTF8&iwloc=&output=embed";
+  "https://maps.google.com/maps?width=600&height=400&hl=en&q=1%C2%B018%2727.2%22N%20103%C2%B050%2748.3%22E&t=&z=14&ie=UTF8&iwloc=B&output=embed";
 
-const MAP_DIRECTIONS_URL = "https://www.google.com/maps/search/?api=1&query=Singapore";
+const MAP_DIRECTIONS_URL =
+  "https://www.google.com/maps/search/?api=1&query=1%C2%B018%2727.2%22N%20103%C2%B050%2748.3%22E";
 
 export default function Contact2() {
   const [formData, setFormData] = useState({

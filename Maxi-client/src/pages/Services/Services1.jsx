@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import servicesHero from "../../assets/maxicab-1.jpg";
+import servicesHero from "../../assets/maxicab-5.jpg";
 
 export default function Services1() {
   const reduceMotion = useReducedMotion();
