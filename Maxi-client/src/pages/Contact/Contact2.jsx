@@ -12,7 +12,7 @@ import {
   MapPinned,
 } from "lucide-react";
 
-const BUSINESS_EMAIL = "info@yourdomain.com";
+const BUSINESS_EMAIL = "Maxicabstarprime@gmail.com";
 const BUSINESS_PHONE = "+65 9866 9334";
 
 

@@ -29,7 +29,7 @@ const serviceLinks = [
 
 const PHONE_NUMBER = "+6598669334";
 const WHATSAPP_NUMBER = "65XXXXXXXX";
-const EMAIL = "info@yourdomain.com";
+const EMAIL = "Maxicabstarprime@gmail.com";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
