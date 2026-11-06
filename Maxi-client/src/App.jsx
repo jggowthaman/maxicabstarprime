@@ -1,9 +1,11 @@
+
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
   Link,
+  Outlet,
 } from "react-router-dom";
 
 // Layouts
@@ -17,6 +19,8 @@ import Booking from "./pages/Booking";
 import Services from "./pages/Services/Services";
 import Vehicles from "./pages/Vehicles/Vehicles";
 import Contact from "./pages/Contact/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 // Admin Pages
 import Dashboard from "./admin/Dashboard";
@@ -24,7 +28,26 @@ import Bookings from "./admin/Bookings";
 import BookingDetails from "./admin/BookingDetails";
 import Customers from "./admin/Customers";
 import Settings from "./admin/Settings";
-// import AdminLogin from "./admin/AdminLogin";
+import AdminLogin from "./admin/AdminLogin";
+
+
+// Floating WhatsApp Button
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
+
+// Authentication key
+const AUTH_KEY = "maxicab_admin_authenticated";
+
+// Protect admin routes
+function ProtectedAdminRoute() {
+  const isAuthenticated =
+    sessionStorage.getItem(AUTH_KEY) === "true";
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return <Outlet />;
+}
 
 // 404 Page
 function NotFound() {
@@ -58,75 +81,88 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* PUBLIC WEBSITE */}
-        <Route path="/" element={<MainLayout />}>
+        <Route
+          path="/"
+          element={
+            <>
+              <MainLayout />
+              <FloatingWhatsApp />
+            </>
+          }
+        >
           <Route index element={<Home />} />
-
           <Route path="about" element={<About />} />
-
           <Route path="booking" element={<Booking />} />
-
           <Route path="services" element={<Services />} />
-
           <Route path="vehicles" element={<Vehicles />} />
-
           <Route path="contact" element={<Contact />} />
         </Route>
+
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route
+  path="terms-and-conditions"
+  element={<TermsAndConditions />}
+/>
 
         {/* ADMIN LOGIN */}
         <Route
           path="/admin/login"
-          // element={<AdminLogin />}
+          element={<AdminLogin />}
         />
 
-        {/* ADMIN PANEL */}
-        <Route path="/admin" element={<AdminLayout />}>
-          {/* Default admin route */}
-          <Route
-            index
-            element={
-              <Navigate
-                to="/admin/dashboard"
-                replace
-              />
-            }
-          />
+        {/* PROTECTED ADMIN PANEL */}
+        <Route element={<ProtectedAdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            {/* Default admin route */}
+            <Route
+              index
+              element={
+                <Navigate
+                  to="/admin/dashboard"
+                  replace
+                />
+              }
+            />
 
-          {/* Dashboard */}
-          <Route
-            path="dashboard"
-            element={<Dashboard />}
-          />
+            {/* Dashboard */}
+            <Route
+              path="dashboard"
+              element={<Dashboard />}
+            />
 
-          {/* Booking management */}
-          <Route
-            path="bookings"
-            element={<Bookings />}
-          />
+            {/* Bookings */}
+            <Route
+              path="bookings"
+              element={<Bookings />}
+            />
 
-          {/* Individual booking details */}
-          <Route
-            path="bookings/:id"
-            element={<BookingDetails />}
-          />
+            {/* Booking Details */}
+            <Route
+              path="bookings/:id"
+              element={<BookingDetails />}
+            />
 
-          {/* Customer management */}
-          <Route
-            path="customers"
-            element={<Customers />}
-          />
+            {/* Customers */}
+            <Route
+              path="customers"
+              element={<Customers />}
+            />
 
-          {/* Admin settings */}
-          <Route
-            path="settings"
-            element={<Settings />}
-          />
+            {/* Settings */}
+            <Route
+              path="settings"
+              element={<Settings />}
+            />
+          </Route>
         </Route>
 
-        {/* 404 - PAGE NOT FOUND */}
+        {/* 404 PAGE */}
         <Route
           path="*"
           element={<NotFound />}
         />
+
+        
       </Routes>
     </BrowserRouter>
   );

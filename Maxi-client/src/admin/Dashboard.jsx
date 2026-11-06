@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,39 +13,9 @@ import {
   RefreshCw,
   TrendingUp,
   Users,
-  Wallet,
   CalendarCheck,
-  Plane,
-  MapPin,
-  Menu,
 } from "lucide-react";
-
-const stats = [
-  {
-    title: "Total Bookings",
-    value: "—",
-    description: "All-time reservations",
-    icon: CalendarDays,
-  },
-  {
-    title: "Pending Bookings",
-    value: "—",
-    description: "Awaiting confirmation",
-    icon: Clock3,
-  },
-  {
-    title: "Confirmed Bookings",
-    value: "—",
-    description: "Successfully confirmed",
-    icon: CheckCircle2,
-  },
-  {
-    title: "Total Customers",
-    value: "—",
-    description: "Registered customers",
-    icon: Users,
-  },
-];
+import { getBookings } from "../services/bookingService";
 
 const quickActions = [
   {
@@ -68,6 +38,26 @@ const quickActions = [
   },
 ];
 
+const normalizeStatus = (status = "") =>
+  status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+const getCustomerName = (booking) =>
+  booking.customer_name ||
+  booking.full_name ||
+  booking.name ||
+  booking.customerName ||
+  "Guest";
+
+const getBookingId = (booking) =>
+  booking.booking_id || booking.id || booking.reference || "—";
+
+const getPickupDate = (booking) =>
+  booking.pickup_date ||
+  booking.travel_date ||
+  booking.booking_date ||
+  booking.date ||
+  booking.created_at;
+
 function StatCard({ item, index }) {
   const Icon = item.icon;
 
@@ -81,7 +71,6 @@ function StatCard({ item, index }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-gray-400">{item.title}</p>
-
           <h3 className="mt-4 text-3xl font-semibold tracking-tight text-white">
             {item.value}
           </h3>
@@ -101,6 +90,8 @@ function StatCard({ item, index }) {
 }
 
 function StatusBadge({ status }) {
+  const normalized = normalizeStatus(status);
+
   const styles = {
     Pending: "border-amber-400/20 bg-amber-400/10 text-amber-300",
     Confirmed: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
@@ -111,21 +102,118 @@ function StatusBadge({ status }) {
   return (
     <span
       className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${
-        styles[status] ||
-        "border-white/10 bg-white/5 text-gray-300"
+        styles[normalized] || "border-white/10 bg-white/5 text-gray-300"
       }`}
     >
-      {status}
+      {normalized || "Unknown"}
     </span>
   );
 }
 
 export default function Dashboard() {
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const refreshDashboard = () => {
-    // Connect the dashboard API here when the backend is ready.
-    setLastUpdated(new Date());
+  const refreshDashboard = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await getBookings();
+
+      setBookings(Array.isArray(data) ? data : []);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error("Dashboard bookings error:", err);
+
+      setError(
+        err.response?.data?.message ||
+          "Unable to load bookings. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshDashboard();
+  }, [refreshDashboard]);
+
+  const stats = useMemo(() => {
+    const pending = bookings.filter(
+      (booking) => normalizeStatus(booking.status) === "Pending"
+    ).length;
+
+    const confirmed = bookings.filter(
+      (booking) => normalizeStatus(booking.status) === "Confirmed"
+    ).length;
+
+    const customers = new Set(
+      bookings
+        .map(
+          (booking) =>
+            booking.customer_email ||
+            booking.email ||
+            booking.customer_phone ||
+            booking.phone ||
+            getCustomerName(booking)
+        )
+        .filter(Boolean)
+        .map((value) => String(value).toLowerCase())
+    );
+
+    return [
+      {
+        title: "Total Bookings",
+        value: bookings.length,
+        description: "All booking records",
+        icon: CalendarDays,
+      },
+      {
+        title: "Pending Bookings",
+        value: pending,
+        description: "Awaiting confirmation",
+        icon: Clock3,
+      },
+      {
+        title: "Confirmed Bookings",
+        value: confirmed,
+        description: "Successfully confirmed",
+        icon: CheckCircle2,
+      },
+      {
+        title: "Total Customers",
+        value: customers.size,
+        description: "Unique customers in bookings",
+        icon: Users,
+      },
+    ];
+  }, [bookings]);
+
+  const recentBookings = useMemo(() => {
+    return [...bookings]
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at || getPickupDate(a) || 0);
+        const dateB = new Date(b.created_at || getPickupDate(b) || 0);
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+  }, [bookings]);
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    const parsed = new Date(date);
+
+    if (Number.isNaN(parsed.getTime())) return String(date);
+
+    return parsed.toLocaleDateString("en-SG", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
@@ -158,9 +246,13 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={refreshDashboard}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#151515] px-4 py-3 text-sm text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#151515] px-4 py-3 text-sm text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <RefreshCw size={16} />
+              <RefreshCw
+                size={16}
+                className={loading ? "animate-spin" : ""}
+              />
               Refresh
             </button>
 
@@ -174,7 +266,7 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* System notice */}
+        {/* API status */}
         <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="rounded-lg bg-[#D4AF37]/10 p-2 text-[#D4AF37]">
@@ -183,17 +275,25 @@ export default function Dashboard() {
 
             <div>
               <h2 className="text-sm font-medium text-white">
-                Dashboard preview mode
+                {error ? "Dashboard connection issue" : "Live booking dashboard"}
               </h2>
+
               <p className="mt-1 text-xs leading-5 text-gray-400">
-                Connect the Express API to display live booking and customer
-                statistics.
+                {error
+                  ? error
+                  : "Booking statistics are retrieved from your backend API."}
               </p>
             </div>
           </div>
 
-          <span className="w-fit rounded-full border border-[#D4AF37]/20 px-3 py-1 text-xs text-[#D4AF37]">
-            API not connected
+          <span
+            className={`w-fit rounded-full border px-3 py-1 text-xs ${
+              error
+                ? "border-red-400/20 text-red-300"
+                : "border-emerald-400/20 text-emerald-300"
+            }`}
+          >
+            {error ? "Connection error" : "API connected"}
           </span>
         </div>
 
@@ -208,22 +308,19 @@ export default function Dashboard() {
             </div>
 
             <span className="hidden text-xs text-gray-500 sm:block">
-              Last refreshed: {lastUpdated.toLocaleTimeString()}
+              Last refreshed:{" "}
+              {lastUpdated ? lastUpdated.toLocaleTimeString() : "—"}
             </span>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {stats.map((item, index) => (
-              <StatCard
-                key={item.title}
-                item={item}
-                index={index}
-              />
+              <StatCard key={item.title} item={item} index={index} />
             ))}
           </div>
         </section>
 
-        {/* Main content grid */}
+        {/* Main content */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           {/* Recent bookings */}
           <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414] xl:col-span-2">
@@ -248,53 +345,96 @@ export default function Dashboard() {
               <table className="w-full min-w-[680px] text-left">
                 <thead>
                   <tr className="border-b border-white/5 bg-white/[0.02]">
-                    <th className="px-6 py-4 text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Booking
-                    </th>
-                    <th className="px-6 py-4 text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Customer
-                    </th>
-                    <th className="px-6 py-4 text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Pickup date
-                    </th>
-                    <th className="px-6 py-4 text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Status
-                    </th>
+                    {["Booking", "Customer", "Pickup date", "Status"].map(
+                      (heading) => (
+                        <th
+                          key={heading}
+                          className="px-6 py-4 text-xs font-medium uppercase tracking-wider text-gray-500"
+                        >
+                          {heading}
+                        </th>
+                      )
+                    )}
                   </tr>
                 </thead>
 
                 <tbody>
-                  <tr>
-                    <td colSpan={4} className="px-6 py-16 text-center">
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 text-[#D4AF37]">
-                        <CalendarDays size={25} />
-                      </div>
-
-                      <h3 className="mt-4 text-sm font-medium text-white">
-                        No bookings to display
-                      </h3>
-
-                      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
-                        Once your backend is connected, customer reservations
-                        will appear here automatically.
-                      </p>
-
-                      <Link
-                        to="/admin/bookings"
-                        className="mt-5 inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-6 py-12 text-center text-sm text-gray-400"
                       >
-                        Open bookings
-                        <ArrowUpRight size={16} />
-                      </Link>
-                    </td>
-                  </tr>
+                        Loading bookings...
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-6 py-12 text-center text-sm text-red-300"
+                      >
+                        {error}
+                      </td>
+                    </tr>
+                  ) : recentBookings.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-16 text-center">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 text-[#D4AF37]">
+                          <CalendarDays size={25} />
+                        </div>
+
+                        <h3 className="mt-4 text-sm font-medium text-white">
+                          No bookings to display
+                        </h3>
+
+                        <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
+                          Customer reservations will appear here once they are
+                          submitted.
+                        </p>
+
+                        <Link
+                          to="/admin/bookings"
+                          className="mt-5 inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+                        >
+                          Open bookings
+                          <ArrowUpRight size={16} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ) : (
+                    recentBookings.map((booking, index) => (
+                      <motion.tr
+                        key={booking.id || booking.booking_id || index}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="border-b border-white/5 transition hover:bg-white/[0.02]"
+                      >
+                        <td className="px-6 py-4 text-sm font-medium text-[#D4AF37]">
+                          #{getBookingId(booking)}
+                        </td>
+
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          {getCustomerName(booking)}
+                        </td>
+
+                        <td className="px-6 py-4 text-sm text-gray-400">
+                          {formatDate(getPickupDate(booking))}
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <StatusBadge status={booking.status || "Pending"} />
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
             <div className="border-t border-white/10 px-5 py-4 sm:px-6">
               <p className="text-xs text-gray-500">
-                Showing recent booking records when available.
+                Showing {recentBookings.length} of {bookings.length} bookings.
               </p>
             </div>
           </section>
@@ -317,10 +457,7 @@ export default function Dashboard() {
                     key={action.title}
                     initial={{ opacity: 0, x: 12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      duration: 0.3,
-                      delay: 0.2 + index * 0.08,
-                    }}
+                    transition={{ duration: 0.3, delay: 0.2 + index * 0.08 }}
                   >
                     <Link
                       to={action.to}
@@ -334,6 +471,7 @@ export default function Dashboard() {
                         <h3 className="text-sm font-medium text-white transition group-hover:text-[#D4AF37]">
                           {action.title}
                         </h3>
+
                         <p className="mt-1 text-xs leading-5 text-gray-500">
                           {action.description}
                         </p>
@@ -349,46 +487,40 @@ export default function Dashboard() {
               })}
             </div>
 
-            {/* Booking status guide */}
+            {/* Status guide */}
             <div className="mt-7 border-t border-white/10 pt-6">
               <h3 className="mb-4 text-sm font-semibold">
                 Booking Status Guide
               </h3>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-gray-400">Pending</span>
-                  <StatusBadge status="Pending" />
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-gray-400">Confirmed</span>
-                  <StatusBadge status="Confirmed" />
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-gray-400">Completed</span>
-                  <StatusBadge status="Completed" />
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-gray-400">Cancelled</span>
-                  <StatusBadge status="Cancelled" />
-                </div>
+                {["Pending", "Confirmed", "Completed", "Cancelled"].map(
+                  (status) => (
+                    <div
+                      key={status}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="text-sm text-gray-400">{status}</span>
+                      <StatusBadge status={status} />
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </section>
         </div>
 
-        {/* Footer note */}
+        {/* Footer */}
         <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {new Date().getFullYear()} MaxiCabStar Prime. Admin Panel.
-          </p>
+          <p>© {new Date().getFullYear()} MaxiCabStar Prime. Admin Panel.</p>
 
           <p className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-amber-400" />
-            Waiting for backend connection
+            <span
+              className={`h-2 w-2 rounded-full ${
+                error ? "bg-red-400" : "bg-emerald-400"
+              }`}
+            />
+            {error ? "Backend connection issue" : "Dashboard connected"}
           </p>
         </div>
       </div>

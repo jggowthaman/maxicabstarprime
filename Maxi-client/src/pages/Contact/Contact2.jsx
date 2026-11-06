@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import api from "../../api/axios";
 import {
   Mail,
   Phone,
@@ -14,7 +15,7 @@ import {
 
 const BUSINESS_EMAIL = "Maxicabstarprime@gmail.com";
 const BUSINESS_PHONE = "+65 9866 9334";
-
+const WHATSAPP_NUMBER = "6598669334";
 
 const MAP_EMBED_URL =
   "https://maps.google.com/maps?width=600&height=400&hl=en&q=1%C2%B018%2727.2%22N%20103%C2%B050%2748.3%22E&t=&z=14&ie=UTF8&iwloc=B&output=embed";
@@ -22,16 +23,21 @@ const MAP_EMBED_URL =
 const MAP_DIRECTIONS_URL =
   "https://www.google.com/maps/search/?api=1&query=1%C2%B018%2727.2%22N%20103%C2%B050%2748.3%22E";
 
+const INITIAL_FORM = {
+  name: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
+};
+
 export default function Contact2() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState({
+    type: "",
     message: "",
   });
-
-  const [status, setStatus] = useState("");
 
   const contactDetails = [
     {
@@ -39,7 +45,7 @@ export default function Contact2() {
       title: "Call Us",
       value: BUSINESS_PHONE,
       description: "Speak with our team about your journey.",
-      href: "tel:+65XXXXXXXX",
+      href: `tel:${BUSINESS_PHONE.replace(/\s/g, "")}`,
     },
     {
       icon: Mail,
@@ -71,39 +77,68 @@ export default function Contact2() {
       ...previous,
       [name]: value,
     }));
+
+    if (status.message) {
+      setStatus({ type: "", message: "" });
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus("");
+
+    if (isSubmitting) return;
 
     const { name, email, phone, subject, message } = formData;
 
     if (!name.trim() || !email.trim() || !message.trim()) {
-      setStatus("Please complete your name, email, and message.");
+      setStatus({
+        type: "error",
+        message: "Please complete your name, email, and message.",
+      });
       return;
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    try {
+      setIsSubmitting(true);
+      setStatus({ type: "", message: "" });
 
-    if (!emailPattern.test(email)) {
-      setStatus("Please enter a valid email address.");
-      return;
+      const response = await api.post("/customers", {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        subject: subject.trim() || "Website Enquiry",
+        message: message.trim(),
+      });
+
+      if (response.data?.success) {
+        setStatus({
+          type: "success",
+          message:
+            response.data.message ||
+            "Thank you! Your enquiry has been submitted successfully.",
+        });
+
+        setFormData(INITIAL_FORM);
+      } else {
+        setStatus({
+          type: "error",
+          message:
+            response.data?.message ||
+            "Unable to submit your enquiry. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Contact submission error:", error);
+
+      setStatus({
+        type: "error",
+        message:
+          error.response?.data?.message ||
+          "Something went wrong. Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const emailSubject = encodeURIComponent(
-      subject.trim() || "Website Enquiry"
-    );
-
-    const emailBody = encodeURIComponent(
-      `Name: ${name}\n` +
-        `Email: ${email}\n` +
-        `Phone: ${phone || "Not provided"}\n\n` +
-        `Message:\n${message}`
-    );
-
-    window.location.href =
-      `mailto:${BUSINESS_EMAIL}?subject=${emailSubject}&body=${emailBody}`;
   };
 
   const inputClasses =
@@ -114,7 +149,6 @@ export default function Contact2() {
       id="contact-details"
       className="relative overflow-hidden bg-[#0B0B0B] px-4 py-16 text-[#F8F4EE] sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
-      {/* Background decoration */}
       <div className="pointer-events-none absolute -left-32 top-20 h-72 w-72 rounded-full bg-[#D4AF37]/[0.06] blur-[100px]" />
       <div className="pointer-events-none absolute -right-32 bottom-10 h-72 w-72 rounded-full bg-[#D4AF37]/[0.05] blur-[100px]" />
 
@@ -142,9 +176,9 @@ export default function Contact2() {
           </p>
         </motion.div>
 
-        {/* Contact information and enquiry form */}
+        {/* Contact information + form */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12">
-          {/* Contact details */}
+          {/* Contact information */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -161,8 +195,8 @@ export default function Contact2() {
             </h3>
 
             <p className="mt-4 text-sm leading-7 text-white/55">
-              Whether you need an airport pickup, private transfer, or
-              group transportation, share your requirements with us.
+              Whether you need an airport pickup, private transfer, or group
+              transportation, share your requirements with us.
             </p>
 
             <div className="mt-8 space-y-5">
@@ -236,11 +270,10 @@ export default function Contact2() {
                     requirements.
                   </p>
 
-                  {/* Replace with the actual WhatsApp number */}
                   <a
-                    href="https://wa.me/65XXXXXXXX"
+                    href={`https://wa.me/${WHATSAPP_NUMBER}`}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#D4AF37] transition hover:text-white"
                   >
                     Chat With Us
@@ -377,36 +410,39 @@ export default function Contact2() {
                 />
               </div>
 
-              {status && (
-                <p
-                  role="alert"
-                  className="rounded-lg border border-red-400/20 bg-red-400/5 px-4 py-3 text-sm text-red-300"
+              {/* Submission status */}
+              {status.message && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className={`rounded-lg border px-4 py-3 text-sm ${
+                    status.type === "success"
+                      ? "border-green-400/20 bg-green-400/5 text-green-300"
+                      : "border-red-400/20 bg-red-400/5 text-red-300"
+                  }`}
                 >
-                  {status}
-                </p>
+                  {status.message}
+                </div>
               )}
 
               <button
                 type="submit"
-                className="group inline-flex w-full items-center justify-center gap-3 rounded-lg bg-[#D4AF37] px-6 py-4 text-sm font-bold text-black transition duration-300 hover:bg-[#F0D778] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] sm:w-auto"
+                disabled={isSubmitting}
+                className="group inline-flex w-full items-center justify-center gap-3 rounded-lg bg-[#D4AF37] px-6 py-4 text-sm font-bold text-black transition hover:bg-[#F0D778] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
-                Send Enquiry
-                <Send
-                  size={17}
-                  className="transition-transform duration-300 group-hover:translate-x-1"
-                />
+                {isSubmitting ? "Submitting..." : "Send Enquiry"}
+                <Send size={17} />
               </button>
 
               <p className="text-xs leading-6 text-white/35">
-                Required fields are marked with *. Submitting opens the
-                visitor's default email application; this form does not
-                directly send or store enquiries on a server.
+                Your enquiry will be submitted securely and saved for our team
+                to review. Required fields are marked with *.
               </p>
             </form>
           </motion.div>
         </div>
 
-        {/* Location & Service Area */}
+        {/* Location and service area */}
         <motion.div
           id="location-service-area"
           initial={{ opacity: 0, y: 30 }}
@@ -416,7 +452,6 @@ export default function Contact2() {
           className="mt-16 overflow-hidden rounded-2xl border border-white/10 bg-[#111111] sm:mt-20"
         >
           <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr]">
-            {/* Location information */}
             <div className="flex flex-col justify-center p-6 sm:p-9 lg:p-10">
               <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
                 <MapPinned size={17} />
@@ -443,6 +478,7 @@ export default function Contact2() {
                   <h4 className="text-sm font-semibold text-white">
                     Service Coverage
                   </h4>
+
                   <p className="mt-1 text-sm leading-6 text-white/50">
                     Singapore — contact us to discuss your specific route.
                   </p>
@@ -452,23 +488,17 @@ export default function Contact2() {
               <a
                 href={MAP_DIRECTIONS_URL}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="mt-7 inline-flex w-fit items-center justify-center gap-3 rounded-lg border border-[#D4AF37]/50 px-5 py-3 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37] hover:text-black"
               >
                 Explore Map
                 <ArrowUpRight size={17} />
               </a>
-
-              <p className="mt-4 text-xs leading-5 text-white/35">
-                Demo map: Singapore. Update the map link to the actual
-                business location if a fixed office or pickup point exists.
-              </p>
             </div>
 
-            {/* Embedded Google Map */}
             <div className="relative min-h-[300px] overflow-hidden bg-[#171717] sm:min-h-[380px] lg:min-h-[450px]">
               <iframe
-                title="Demo Google Map showing Singapore"
+                title="Google Map showing Singapore"
                 src={MAP_EMBED_URL}
                 width="100%"
                 height="100%"
@@ -476,12 +506,12 @@ export default function Contact2() {
                   border: 0,
                   position: "absolute",
                   inset: 0,
-                  minHeight: "300px",
                 }}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen
               />
+
               <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
             </div>
           </div>
