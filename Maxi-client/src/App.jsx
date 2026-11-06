@@ -1,4 +1,3 @@
-
 import {
   BrowserRouter,
   Routes,
@@ -30,12 +29,21 @@ import Customers from "./admin/Customers";
 import Settings from "./admin/Settings";
 import AdminLogin from "./admin/AdminLogin";
 
-
 // Floating WhatsApp Button
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 
 // Authentication key
 const AUTH_KEY = "maxicab_admin_authenticated";
+
+// Public layout with WhatsApp
+function PublicLayout() {
+  return (
+    <>
+      <MainLayout />
+      <FloatingWhatsApp />
+    </>
+  );
+}
 
 // Protect admin routes
 function ProtectedAdminRoute() {
@@ -62,8 +70,8 @@ function NotFound() {
       </h1>
 
       <p className="mt-5 max-w-md text-sm leading-7 text-gray-400 sm:text-base">
-        Sorry, the page you are looking for does not exist or may have been
-        moved.
+        Sorry, the page you are looking for does not exist or may have
+        been moved.
       </p>
 
       <Link
@@ -81,88 +89,50 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* PUBLIC WEBSITE */}
-        <Route
-          path="/"
-          element={
-            <>
-              <MainLayout />
-              <FloatingWhatsApp />
-            </>
-          }
-        >
-          <Route index element={<Home />} />
-          <Route path="about" element={<About />} />
-          <Route path="booking" element={<Booking />} />
-          <Route path="services" element={<Services />} />
-          <Route path="vehicles" element={<Vehicles />} />
-          <Route path="contact" element={<Contact />} />
+        <Route path="/" element={<PublicLayout />}>
+          <Route element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="booking" element={<Booking />} />
+            <Route path="services" element={<Services />} />
+            <Route path="vehicles" element={<Vehicles />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="privacy-policy" element={<PrivacyPolicy />} />
+            <Route
+              path="terms-and-conditions"
+              element={<TermsAndConditions />}
+            />
+          </Route>
         </Route>
 
-        <Route path="privacy-policy" element={<PrivacyPolicy />} />
-        <Route
-  path="terms-and-conditions"
-  element={<TermsAndConditions />}
-/>
-
         {/* ADMIN LOGIN */}
-        <Route
-          path="/admin/login"
-          element={<AdminLogin />}
-        />
+        <Route path="/admin/login" element={<AdminLogin />} />
 
         {/* PROTECTED ADMIN PANEL */}
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
-            {/* Default admin route */}
             <Route
               index
-              element={
-                <Navigate
-                  to="/admin/dashboard"
-                  replace
-                />
-              }
+              element={<Navigate to="/admin/dashboard" replace />}
             />
 
-            {/* Dashboard */}
-            <Route
-              path="dashboard"
-              element={<Dashboard />}
-            />
+            <Route path="dashboard" element={<Dashboard />} />
 
-            {/* Bookings */}
-            <Route
-              path="bookings"
-              element={<Bookings />}
-            />
+            <Route path="bookings" element={<Bookings />} />
 
-            {/* Booking Details */}
             <Route
               path="bookings/:id"
               element={<BookingDetails />}
             />
 
-            {/* Customers */}
-            <Route
-              path="customers"
-              element={<Customers />}
-            />
+            <Route path="customers" element={<Customers />} />
 
-            {/* Settings */}
-            <Route
-              path="settings"
-              element={<Settings />}
-            />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
 
-        {/* 404 PAGE */}
-        <Route
-          path="*"
-          element={<NotFound />}
-        />
-
-        
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
