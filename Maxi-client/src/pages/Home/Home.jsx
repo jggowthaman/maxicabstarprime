@@ -1,20 +1,29 @@
-import Home1 from "./Home1"
-import Home2 from "./Home2"
-import Home3 from "./Home3"
-import Home4 from "./Home4"
-import Home5 from "./Home5"
-import Home6 from "./Home6"
+import SEO from "../../components/SEO";
+
+import Home1 from "./Home1";
+import Home2 from "./Home2";
+import Home3 from "./Home3";
+import Home4 from "./Home4";
+import Home5 from "./Home5";
+import Home6 from "./Home6";
 
 export default function Home() {
   return (
     <>
-    <Home1/>
-    <Home6/>
+      {/* Homepage SEO */}
+      <SEO
+        title="MaxiCabStar Prime | Maxi Cab Singapore & Airport Transfers"
+        description="Book a reliable maxi cab in Singapore with MaxiCabStar Prime. Enjoy airport transfers, group transportation, and comfortable private rides."
+        path="/"
+      />
 
-    <Home2/>
-    <Home3/>
-    <Home4/>
-    <Home5/>
+      {/* Homepage Sections */}
+      <Home1 />
+      <Home6 />
+      <Home2 />
+      <Home3 />
+      <Home4 />
+      <Home5 />
     </>
-  )
+  );
 }

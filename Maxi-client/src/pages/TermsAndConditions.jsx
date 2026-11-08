@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { FileText, ShieldCheck, Clock, CarFront } from "lucide-react";
 import { Link } from "react-router-dom";
+import SEO from "../../components/SEO";
 
 const sections = [
   {
@@ -118,148 +119,158 @@ Updated terms will be published on this page. Continued use of our website or se
 
 export default function TermsAndConditions() {
   return (
-    <main className="min-h-screen bg-[#0B0B0B] text-[#F8F4EE]">
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[#D4AF37]/20">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/10 to-transparent" />
+    <>
+      {/* SEO */}
+      <SEO
+        title="Terms & Conditions | MaxiCabStar Prime Singapore"
+        description="Read MaxiCabStar Prime's Singapore maxicab booking terms and conditions covering reservations, cancellations, payments, passenger responsibilities, and transportation services."
+        path="/terms-and-conditions"
+      />
 
-        <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 md:py-28">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-3xl"
-          >
-            <div className="mb-6 flex items-center gap-3">
-              <FileText className="h-8 w-8 text-[#D4AF37]" />
+      <main className="min-h-screen bg-[#0B0B0B] text-[#F8F4EE]">
+        {/* Hero */}
+        <section className="relative overflow-hidden border-b border-[#D4AF37]/20">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/10 to-transparent" />
 
-              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
-                Service Agreement
-              </span>
-            </div>
-
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-              Terms &{" "}
-              <span className="text-[#D4AF37]">Conditions</span>
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
-              Please review the terms governing bookings and transportation
-              services provided by MaxiCabStar Prime.
-            </p>
-
-            <p className="mt-5 text-sm text-white/40">
-              Last Updated: November 6, 2026
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Highlights */}
-      <section className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-12 sm:grid-cols-3 sm:px-8">
-        {[
-          {
-            icon: CarFront,
-            title: "Transportation",
-            description: "Booking and vehicle service conditions.",
-          },
-          {
-            icon: Clock,
-            title: "Booking Policy",
-            description: "Reservation, cancellation, and timing terms.",
-          },
-          {
-            icon: ShieldCheck,
-            title: "Customer Safety",
-            description: "Passenger responsibilities and service rules.",
-          },
-        ].map((item, index) => {
-          const Icon = item.icon;
-
-          return (
+          <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 md:py-28">
             <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="max-w-3xl"
             >
-              <Icon className="mb-4 h-7 w-7 text-[#D4AF37]" />
+              <div className="mb-6 flex items-center gap-3">
+                <FileText className="h-8 w-8 text-[#D4AF37]" />
 
-              <h3 className="mb-2 text-lg font-semibold">
-                {item.title}
-              </h3>
+                <span className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
+                  Service Agreement
+                </span>
+              </div>
 
-              <p className="text-sm leading-6 text-white/50">
-                {item.description}
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                Terms &{" "}
+                <span className="text-[#D4AF37]">Conditions</span>
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
+                Please review the terms governing bookings and transportation
+                services provided by MaxiCabStar Prime.
+              </p>
+
+              <p className="mt-5 text-sm text-white/40">
+                Last Updated: November 6, 2026
               </p>
             </motion.div>
-          );
-        })}
-      </section>
+          </div>
+        </section>
 
-      {/* Terms */}
-      <section className="mx-auto max-w-5xl px-5 pb-20 sm:px-8">
-        <div className="space-y-10">
-          {sections.map((section, index) => (
-            <motion.article
-              key={section.title}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="border-b border-white/10 pb-8"
+        {/* Highlights */}
+        <section className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-12 sm:grid-cols-3 sm:px-8">
+          {[
+            {
+              icon: CarFront,
+              title: "Transportation",
+              description: "Booking and vehicle service conditions.",
+            },
+            {
+              icon: Clock,
+              title: "Booking Policy",
+              description: "Reservation, cancellation, and timing terms.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Customer Safety",
+              description: "Passenger responsibilities and service rules.",
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+              >
+                <Icon className="mb-4 h-7 w-7 text-[#D4AF37]" />
+
+                <h3 className="mb-2 text-lg font-semibold">
+                  {item.title}
+                </h3>
+
+                <p className="text-sm leading-6 text-white/50">
+                  {item.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </section>
+
+        {/* Terms */}
+        <section className="mx-auto max-w-5xl px-5 pb-20 sm:px-8">
+          <div className="space-y-10">
+            {sections.map((section) => (
+              <motion.article
+                key={section.title}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className="border-b border-white/10 pb-8"
+              >
+                <h2 className="mb-4 text-xl font-semibold text-[#D4AF37] sm:text-2xl">
+                  {section.title}
+                </h2>
+
+                <p className="whitespace-pre-line text-sm leading-8 text-white/65 sm:text-base">
+                  {section.content}
+                </p>
+
+                {section.link && (
+                  <Link
+                    to="/privacy-policy"
+                    className="mt-4 inline-block text-sm text-[#D4AF37] hover:text-white"
+                  >
+                    Read our Privacy Policy →
+                  </Link>
+                )}
+              </motion.article>
+            ))}
+          </div>
+
+          {/* Contact */}
+          <div className="mt-12 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-6 sm:p-8">
+            <h2 className="mb-3 text-xl font-semibold">
+              Questions About These Terms?
+            </h2>
+
+            <p className="text-sm leading-7 text-white/60">
+              Please contact MaxiCabStar Prime through our website or
+              customer service channels for clarification regarding
+              bookings and transportation services.
+            </p>
+
+            <Link
+              to="/contact"
+              className="mt-5 inline-flex items-center gap-2 text-sm text-[#D4AF37] hover:text-white"
             >
-              <h2 className="mb-4 text-xl font-semibold text-[#D4AF37] sm:text-2xl">
-                {section.title}
-              </h2>
+              Contact Us →
+            </Link>
+          </div>
 
-              <p className="whitespace-pre-line text-sm leading-8 text-white/65 sm:text-base">
-                {section.content}
-              </p>
-
-              {section.link && (
-                <Link
-                  to="/privacy-policy"
-                  className="mt-4 inline-block text-sm text-[#D4AF37] hover:text-white"
-                >
-                  Read our Privacy Policy →
-                </Link>
-              )}
-            </motion.article>
-          ))}
-        </div>
-
-        {/* Contact */}
-        <div className="mt-12 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-6 sm:p-8">
-          <h2 className="mb-3 text-xl font-semibold">
-            Questions About These Terms?
-          </h2>
-
-          <p className="text-sm leading-7 text-white/60">
-            Please contact MaxiCabStar Prime through our website or
-            customer service channels for clarification regarding
-            bookings and transportation services.
-          </p>
-
-          <Link
-            to="/contact"
-            className="mt-5 inline-flex items-center gap-2 text-sm text-[#D4AF37] hover:text-white"
-          >
-            Contact Us →
-          </Link>
-        </div>
-
-        <div className="mt-10 text-center">
-          <Link
-            to="/"
-            className="text-sm text-[#D4AF37] transition hover:text-white"
-          >
-            ← Back to Home
-          </Link>
-        </div>
-      </section>
-    </main>
+          {/* Back to Home */}
+          <div className="mt-10 text-center">
+            <Link
+              to="/"
+              className="text-sm text-[#D4AF37] transition hover:text-white"
+            >
+              ← Back to Home
+            </Link>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }

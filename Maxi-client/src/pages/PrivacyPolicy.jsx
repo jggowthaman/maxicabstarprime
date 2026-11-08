@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, Lock, Eye, Database, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
+import SEO from "../../components/SEO";
 
 const sections = [
   {
@@ -102,172 +103,181 @@ Any updated policy will be published on this page with a revised date.`,
 
 export default function PrivacyPolicy() {
   return (
-    <main className="min-h-screen bg-[#0B0B0B] text-[#F8F4EE]">
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-[#D4AF37]/20">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/10 to-transparent" />
+    <>
+      {/* SEO */}
+      <SEO
+        title="Privacy Policy | MaxiCabStar Prime Singapore"
+        description="Read the MaxiCabStar Prime Privacy Policy to understand how we collect, use, store, and protect personal information for Singapore maxicab bookings and enquiries."
+        path="/privacy-policy"
+      />
 
-        <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 md:py-28">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-3xl"
-          >
-            <div className="mb-6 flex items-center gap-3">
-              <ShieldCheck className="h-8 w-8 text-[#D4AF37]" />
+      <main className="min-h-screen bg-[#0B0B0B] text-[#F8F4EE]">
+        {/* Hero */}
+        <section className="relative overflow-hidden border-b border-[#D4AF37]/20">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/10 to-transparent" />
 
-              <span className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
-                Your Privacy Matters
-              </span>
-            </div>
-
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-              Privacy{" "}
-              <span className="text-[#D4AF37]">Policy</span>
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
-              Your trust is important to us. Learn how MaxiCabStar Prime
-              collects, uses, and protects your personal information.
-            </p>
-
-            <p className="mt-5 text-sm text-white/40">
-              Last Updated: November 6, 2026
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Privacy highlights */}
-      <section className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-12 sm:grid-cols-3 sm:px-8">
-        {[
-          {
-            icon: Lock,
-            title: "Data Protection",
-            description: "We take reasonable measures to protect your data.",
-          },
-          {
-            icon: Eye,
-            title: "Transparency",
-            description: "We explain how your information is used.",
-          },
-          {
-            icon: Database,
-            title: "Responsible Usage",
-            description: "Your information is used for legitimate purposes.",
-          },
-        ].map((item, index) => {
-          const Icon = item.icon;
-
-          return (
+          <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 md:py-28">
             <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="max-w-3xl"
             >
-              <Icon className="mb-4 h-7 w-7 text-[#D4AF37]" />
+              <div className="mb-6 flex items-center gap-3">
+                <ShieldCheck className="h-8 w-8 text-[#D4AF37]" />
 
-              <h3 className="mb-2 text-lg font-semibold">
-                {item.title}
-              </h3>
+                <span className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
+                  Your Privacy Matters
+                </span>
+              </div>
 
-              <p className="text-sm leading-6 text-white/50">
-                {item.description}
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+                Privacy{" "}
+                <span className="text-[#D4AF37]">Policy</span>
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
+                Your trust is important to us. Learn how MaxiCabStar Prime
+                collects, uses, and protects your personal information.
+              </p>
+
+              <p className="mt-5 text-sm text-white/40">
+                Last Updated: November 6, 2026
               </p>
             </motion.div>
-          );
-        })}
-      </section>
+          </div>
+        </section>
 
-      {/* Policy content */}
-      <section className="mx-auto max-w-5xl px-5 pb-20 sm:px-8">
-        <div className="space-y-10">
-          {sections.map((section, index) => (
-            <motion.article
-              key={section.title}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="border-b border-white/10 pb-8"
-            >
-              <h2 className="mb-4 text-xl font-semibold text-[#D4AF37] sm:text-2xl">
-                {section.title}
-              </h2>
+        {/* Privacy highlights */}
+        <section className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-12 sm:grid-cols-3 sm:px-8">
+          {[
+            {
+              icon: Lock,
+              title: "Data Protection",
+              description: "We take reasonable measures to protect your data.",
+            },
+            {
+              icon: Eye,
+              title: "Transparency",
+              description: "We explain how your information is used.",
+            },
+            {
+              icon: Database,
+              title: "Responsible Usage",
+              description: "Your information is used for legitimate purposes.",
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
 
-              <p className="whitespace-pre-line text-sm leading-8 text-white/65 sm:text-base">
-                {section.content}
-              </p>
+            return (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+              >
+                <Icon className="mb-4 h-7 w-7 text-[#D4AF37]" />
 
-              {section.bullets && (
-                <ul className="mt-4 space-y-3">
-                  {section.bullets.map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-start gap-3 text-sm leading-7 text-white/60 sm:text-base"
-                    >
-                      <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D4AF37]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </motion.article>
-          ))}
-        </div>
+                <h3 className="mb-2 text-lg font-semibold">
+                  {item.title}
+                </h3>
 
-        {/* Contact */}
-        <div className="mt-12 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-6 sm:p-8">
-          <div className="flex items-start gap-4">
-            <Mail className="mt-1 h-6 w-6 shrink-0 text-[#D4AF37]" />
+                <p className="text-sm leading-6 text-white/50">
+                  {item.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </section>
 
-            <div>
-              <h2 className="mb-3 text-xl font-semibold">
-                Contact Us
-              </h2>
+        {/* Policy content */}
+        <section className="mx-auto max-w-5xl px-5 pb-20 sm:px-8">
+          <div className="space-y-10">
+            {sections.map((section) => (
+              <motion.article
+                key={section.title}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className="border-b border-white/10 pb-8"
+              >
+                <h2 className="mb-4 text-xl font-semibold text-[#D4AF37] sm:text-2xl">
+                  {section.title}
+                </h2>
 
-              <p className="mb-5 text-sm leading-7 text-white/60">
-                If you have questions about this Privacy Policy or how
-                your personal information is handled, please contact us.
-              </p>
+                <p className="whitespace-pre-line text-sm leading-8 text-white/65 sm:text-base">
+                  {section.content}
+                </p>
 
-              <p className="text-sm text-white/70">
-                <span className="text-[#D4AF37]">Email:</span>{" "}
-                <a
-                  href="mailto:maxicabstarprime@gmail.com"
-                  className="transition hover:text-[#D4AF37]"
-                >
-                  maxicabstarprime@gmail.com
-                </a>
-              </p>
+                {section.bullets && (
+                  <ul className="mt-4 space-y-3">
+                    {section.bullets.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-3 text-sm leading-7 text-white/60 sm:text-base"
+                      >
+                        <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D4AF37]" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </motion.article>
+            ))}
+          </div>
 
-              <p className="mt-2 text-sm text-white/70">
-                <span className="text-[#D4AF37]">Website:</span>{" "}
-                <a
-                  href="https://maxicabstarprime.com"
-                  className="transition hover:text-[#D4AF37]"
-                >
-                  Maxicabstarprime.com
-                </a>
-              </p>
+          {/* Contact */}
+          <div className="mt-12 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <Mail className="mt-1 h-6 w-6 shrink-0 text-[#D4AF37]" />
+
+              <div>
+                <h2 className="mb-3 text-xl font-semibold">
+                  Contact Us
+                </h2>
+
+                <p className="mb-5 text-sm leading-7 text-white/60">
+                  If you have questions about this Privacy Policy or how
+                  your personal information is handled, please contact us.
+                </p>
+
+                <p className="text-sm text-white/70">
+                  <span className="text-[#D4AF37]">Email:</span>{" "}
+                  <a
+                    href="mailto:maxicabstarprime@gmail.com"
+                    className="transition hover:text-[#D4AF37]"
+                  >
+                    maxicabstarprime@gmail.com
+                  </a>
+                </p>
+
+                <p className="mt-2 text-sm text-white/70">
+                  <span className="text-[#D4AF37]">Website:</span>{" "}
+                  <a
+                    href="https://maxicabstarprime.com"
+                    className="transition hover:text-[#D4AF37]"
+                  >
+                    Maxicabstarprime.com
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Back to home */}
-        <div className="mt-10 text-center">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-[#D4AF37] transition hover:text-white"
-          >
-            ← Back to Home
-          </Link>
-        </div>
-      </section>
-    </main>
+          {/* Back to home */}
+          <div className="mt-10 text-center">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-sm text-[#D4AF37] transition hover:text-white"
+            >
+              ← Back to Home
+            </Link>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
