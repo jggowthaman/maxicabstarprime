@@ -6,7 +6,7 @@ const router = express.Router();
 
 /* =====================================================
    CUSTOMER: CREATE BOOKING
-   Save customer information and booking information
+   Save customer in customers table and booking in bookings
 ===================================================== */
 
 router.post("/", async (req, res) => {
@@ -45,60 +45,53 @@ router.post("/", async (req, res) => {
     }
 
     connection = await pool.getConnection();
-
     await connection.beginTransaction();
 
     let customerId = customer_id || null;
 
-    /* ---------------------------------------------
-       FIND EXISTING CUSTOMER BY PHONE
-    --------------------------------------------- */
-
-    const [existingCustomers] = await connection.execute(
-      "SELECT id FROM customers WHERE phone = ? LIMIT 1",
-      [phone.trim()]
-    );
-
-    if (existingCustomers.length > 0) {
-      customerId = existingCustomers[0].id;
-
-      // Update customer information
-      await connection.execute(
-        `UPDATE customers
-         SET full_name = ?, email = ?
-         WHERE id = ?`,
-        [
-          name.trim(),
-          email?.trim() || null,
-          customerId,
-        ]
-      );
-    } else {
-      // Insert new customer
-      const [customerResult] = await connection.execute(
-        `INSERT INTO customers
-         (full_name, email, phone)
-         VALUES (?, ?, ?)`,
-        [
-          name.trim(),
-          email?.trim() || null,
-          phone.trim(),
-        ]
+    /* Find customer by phone */
+    if (!customerId) {
+      const [existingCustomers] = await connection.execute(
+        `SELECT id
+         FROM customers
+         WHERE phone = ?
+         LIMIT 1`,
+        [phone.trim()]
       );
 
-      customerId = customerResult.insertId;
+      if (existingCustomers.length > 0) {
+        customerId = existingCustomers[0].id;
+
+        await connection.execute(
+          `UPDATE customers
+           SET full_name = ?, email = ?
+           WHERE id = ?`,
+          [
+            name.trim(),
+            email?.trim() || null,
+            customerId,
+          ]
+        );
+      } else {
+        const [customerResult] = await connection.execute(
+          `INSERT INTO customers
+           (full_name, email, phone)
+           VALUES (?, ?, ?)`,
+          [
+            name.trim(),
+            email?.trim() || null,
+            phone.trim(),
+          ]
+        );
+
+        customerId = customerResult.insertId;
+      }
     }
 
-    /* ---------------------------------------------
-       SAVE BOOKING WITH CUSTOMER INFORMATION
-    --------------------------------------------- */
-
+    /* Insert booking using existing database columns */
     const [bookingResult] = await connection.execute(
       `INSERT INTO bookings (
         customer_id,
-        customer_name,
-        customer_email,
-        customer_phone,
         pickup_location,
         dropoff_location,
         pickup_date,
@@ -109,12 +102,9 @@ router.post("/", async (req, res) => {
         special_requests,
         status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         customerId,
-        name.trim(),
-        email?.trim() || null,
-        phone.trim(),
         pickup.trim(),
         destination.trim(),
         travelDate,
@@ -131,7 +121,7 @@ router.post("/", async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Customer and booking saved successfully.",
+      message: "Booking and customer information saved successfully.",
       bookingId: bookingResult.insertId,
       customerId,
     });
@@ -155,7 +145,7 @@ router.post("/", async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN: GET ALL BOOKINGS WITH CUSTOMER INFORMATION
+   ADMIN: GET ALL BOOKINGS WITH CUSTOMER DETAILS
 ===================================================== */
 
 router.get("/", adminMiddleware, async (req, res) => {
@@ -164,9 +154,11 @@ router.get("/", adminMiddleware, async (req, res) => {
       `SELECT
         b.id,
         b.customer_id,
-        b.customer_name,
-        b.customer_email,
-        b.customer_phone,
+
+        c.full_name AS customer_name,
+        c.email AS customer_email,
+        c.phone AS customer_phone,
+
         b.pickup_location,
         b.dropoff_location,
         b.pickup_date,
@@ -176,11 +168,7 @@ router.get("/", adminMiddleware, async (req, res) => {
         b.luggage,
         b.special_requests,
         b.status,
-        b.created_at,
-
-        c.full_name AS linked_customer_name,
-        c.email AS linked_customer_email,
-        c.phone AS linked_customer_phone
+        b.created_at
 
       FROM bookings b
 
@@ -190,12 +178,12 @@ router.get("/", adminMiddleware, async (req, res) => {
       ORDER BY b.created_at DESC`
     );
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       bookings,
     });
   } catch (error) {
-    console.error("Fetch bookings error:", error);
+    console.error("Get all bookings error:", error);
 
     return res.status(500).json({
       success: false,
@@ -212,12 +200,29 @@ router.get("/:id", adminMiddleware, async (req, res) => {
   try {
     const [bookings] = await pool.execute(
       `SELECT
-        b.*,
-        c.full_name AS linked_customer_name,
-        c.email AS linked_customer_email,
-        c.phone AS linked_customer_phone
+        b.id,
+        b.customer_id,
+
+        c.full_name AS customer_name,
+        c.email AS customer_email,
+        c.phone AS customer_phone,
+
+        b.pickup_location,
+        b.dropoff_location,
+        b.pickup_date,
+        b.pickup_time,
+        b.vehicle_type,
+        b.passengers,
+        b.luggage,
+        b.special_requests,
+        b.status,
+        b.created_at
+
       FROM bookings b
-      LEFT JOIN customers c ON b.customer_id = c.id
+
+      LEFT JOIN customers c
+        ON b.customer_id = c.id
+
       WHERE b.id = ?
       LIMIT 1`,
       [req.params.id]
@@ -235,11 +240,11 @@ router.get("/:id", adminMiddleware, async (req, res) => {
       booking: bookings[0],
     });
   } catch (error) {
-    console.error("Fetch single booking error:", error);
+    console.error("Get booking details error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch booking.",
+      message: "Failed to fetch booking details.",
     });
   }
 });
@@ -267,7 +272,9 @@ router.patch("/:id/status", adminMiddleware, async (req, res) => {
     }
 
     const [result] = await pool.execute(
-      "UPDATE bookings SET status = ? WHERE id = ?",
+      `UPDATE bookings
+       SET status = ?
+       WHERE id = ?`,
       [status, req.params.id]
     );
 

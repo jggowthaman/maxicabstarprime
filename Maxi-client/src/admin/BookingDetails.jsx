@@ -1,658 +1,403 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  CalendarDays,
-  Clock3,
-  MapPin,
   UserRound,
-  Phone,
   Mail,
-  CarFront,
+  Phone,
+  MapPin,
+  CalendarDays,
+  Clock,
+  Car,
   Users,
-  CreditCard,
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Navigation,
+  Luggage,
   ShieldCheck,
-  ChevronRight,
+  LoaderCircle,
+  AlertCircle,
 } from "lucide-react";
 
-import { useState } from "react";
-import StatusBadge from "../admin-components/StatusBadge";
+import api from "../../api/axios";
 
-const sampleBookings = [
-  {
-    id: "MCB-1001",
-    customer: "Arun Kumar",
-    email: "arun@example.com",
-    phone: "+65 8123 4567",
-    pickup: "Changi Airport",
-    destination: "Marina Bay Sands",
-    date: "2026-10-27",
-    time: "10:30 AM",
-    vehicle: "Premium Sedan",
-    passengers: 2,
-    amount: 85,
-    status: "Confirmed",
-  },
-  {
-    id: "MCB-1002",
-    customer: "Priya Sharma",
-    email: "priya@example.com",
-    phone: "+65 9234 5678",
-    pickup: "Orchard Road",
-    destination: "Sentosa Island",
-    date: "2026-10-27",
-    time: "12:00 PM",
-    vehicle: "Luxury SUV",
-    passengers: 4,
-    amount: 120,
-    status: "Pending",
-  },
-  {
-    id: "MCB-1003",
-    customer: "Michael Tan",
-    email: "michael@example.com",
-    phone: "+65 8345 6789",
-    pickup: "Marina Bay",
-    destination: "Changi Airport",
-    date: "2026-10-28",
-    time: "08:00 AM",
-    vehicle: "Business Class",
-    passengers: 3,
-    amount: 95,
-    status: "Completed",
-  },
-  {
-    id: "MCB-1004",
-    customer: "Sarah Lee",
-    email: "sarah@example.com",
-    phone: "+65 9456 7890",
-    pickup: "Jurong East",
-    destination: "Singapore Zoo",
-    date: "2026-10-28",
-    time: "02:30 PM",
-    vehicle: "Premium MPV",
-    passengers: 5,
-    amount: 110,
-    status: "Confirmed",
-  },
-  {
-    id: "MCB-1005",
-    customer: "Daniel Wong",
-    email: "daniel@example.com",
-    phone: "+65 8567 8901",
-    pickup: "Changi Airport",
-    destination: "Orchard Road",
-    date: "2026-10-29",
-    time: "06:15 PM",
-    vehicle: "Premium Sedan",
-    passengers: 2,
-    amount: 75,
-    status: "Cancelled",
-  },
-  {
-    id: "MCB-1006",
-    customer: "Emily Chen",
-    email: "emily@example.com",
-    phone: "+65 9678 9012",
-    pickup: "Sentosa Island",
-    destination: "Marina Bay Sands",
-    date: "2026-10-29",
-    time: "09:45 AM",
-    vehicle: "Luxury SUV",
-    passengers: 4,
-    amount: 130,
-    status: "Pending",
-  },
-  {
-    id: "MCB-1007",
-    customer: "Kevin Lim",
-    email: "kevin@example.com",
-    phone: "+65 8789 0123",
-    pickup: "Bugis",
-    destination: "Changi Airport",
-    date: "2026-10-30",
-    time: "11:00 AM",
-    vehicle: "Business Class",
-    passengers: 2,
-    amount: 90,
-    status: "Confirmed",
-  },
-  {
-    id: "MCB-1008",
-    customer: "Jessica Ong",
-    email: "jessica@example.com",
-    phone: "+65 9890 1234",
-    pickup: "Woodlands",
-    destination: "Orchard Road",
-    date: "2026-10-30",
-    time: "04:00 PM",
-    vehicle: "Premium MPV",
-    passengers: 6,
-    amount: 145,
-    status: "Completed",
-  },
-];
+const gold = "#D4AF37";
 
-const statusOptions = [
-  "Pending",
-  "Confirmed",
-  "Completed",
-  "Cancelled",
-];
+export default function BookingDetails() {
+  const { id } = useParams();
 
-const formatDate = (date) => {
-  if (!date) return "—";
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  return new Date(`${date}T00:00:00`).toLocaleDateString("en-SG", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-};
+  const [status, setStatus] = useState("Pending");
+  const [updating, setUpdating] = useState(false);
 
-function DetailItem({ icon: Icon, label, value }) {
-  return (
+  useEffect(() => {
+    fetchBooking();
+  }, [id]);
+
+  const fetchBooking = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get(`/bookings/${id}`);
+
+      const data = response.data.booking || response.data;
+
+      setBooking(data);
+      setStatus(data.status || "Pending");
+    } catch (err) {
+      console.error("Booking details error:", err);
+
+      setError(
+        err.response?.data?.message ||
+          "Unable to load booking details."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStatus = async () => {
+    try {
+      setUpdating(true);
+
+      await api.patch(`/bookings/${id}/status`, { status });
+
+      setBooking((prev) => ({ ...prev, status }));
+
+      alert("Booking status updated successfully.");
+    } catch (err) {
+      console.error("Status update error:", err);
+
+      alert(
+        err.response?.data?.message ||
+          "Failed to update booking status."
+      );
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "Not provided";
+
+    // Avoid timezone date shifting for MySQL DATE values
+    const dateString =
+      typeof date === "string" ? date.substring(0, 10) : date;
+
+    const parsed = new Date(`${dateString}T00:00:00`);
+
+    if (Number.isNaN(parsed.getTime())) return dateString;
+
+    return parsed.toLocaleDateString("en-SG", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (time) => {
+    if (!time) return "Not provided";
+
+    const [hours, minutes] = String(time).split(":");
+    const date = new Date();
+
+    date.setHours(Number(hours), Number(minutes), 0, 0);
+
+    return date.toLocaleTimeString("en-SG", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const InfoItem = ({ icon: Icon, label, value }) => (
     <div className="flex items-start gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D4AF37]/15 bg-[#D4AF37]/10 text-[#D4AF37]">
-        <Icon size={18} />
+      <div className="rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3">
+        <Icon size={18} style={{ color: gold }} />
       </div>
 
-      <div className="min-w-0">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="mt-1 break-words text-sm font-medium text-gray-200">
+      <div>
+        <p className="text-sm text-gray-500">{label}</p>
+        <p className="mt-1 break-words font-medium text-white">
           {value || "Not provided"}
         </p>
       </div>
     </div>
   );
-}
 
-function SectionCard({ title, subtitle, icon: Icon, children }) {
-  return (
-    <section className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111111]">
-      <div className="flex items-center gap-3 border-b border-white/[0.07] px-5 py-5 sm:px-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]">
-          <Icon size={19} />
-        </div>
-
-        <div>
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
-        </div>
-      </div>
-
-      <div className="p-5 sm:p-6">{children}</div>
-    </section>
-  );
-}
-
-export default function BookingDetails() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { id } = useParams();
-
-  const routeBooking = location.state?.booking;
-
-  const initialBooking =
-    (routeBooking && String(routeBooking.id) === String(id)
-      ? routeBooking
-      : null) ||
-    sampleBookings.find((booking) => String(booking.id) === String(id)) ||
-    null;
-
-  const [booking, setBooking] = useState(initialBooking);
-  const [selectedStatus, setSelectedStatus] = useState(
-    initialBooking?.status || "Pending"
-  );
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [notice, setNotice] = useState("");
-
-  const handleStatusUpdate = () => {
-    if (!booking) return;
-
-    setBooking((previous) => ({
-      ...previous,
-      status: selectedStatus,
-    }));
-
-    setNotice(`Booking status changed to ${selectedStatus}.`);
-    setShowConfirmation(false);
-  };
-
-  if (!booking) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0B0B0B] px-4 text-white">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111111] p-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
-            <FileText size={26} />
-          </div>
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#0b0b0b] text-white">
+        <LoaderCircle className="animate-spin" style={{ color: gold }} />
+        <span className="ml-3">Loading booking...</span>
+      </div>
+    );
+  }
 
-          <h1 className="mt-5 text-xl font-semibold">
-            Booking Not Found
-          </h1>
+  if (error || !booking) {
+    return (
+      <div className="min-h-screen bg-[#0b0b0b] p-6 text-white">
+        <div className="mx-auto max-w-3xl rounded-xl border border-red-500/20 bg-red-500/5 p-6">
+          <AlertCircle className="mb-3 text-red-400" />
+          <p>{error || "Booking not found."}</p>
 
-          <p className="mt-2 text-sm leading-6 text-gray-400">
-            We couldn't find this booking. Return to the bookings page and
-            select a booking from the list.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => navigate("/admin/bookings")}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#E6C65A]"
+          <Link
+            to="/admin/bookings"
+            className="mt-5 inline-flex items-center gap-2 text-[#D4AF37]"
           >
-            <ArrowLeft size={17} />
-            Back to Bookings
-          </button>
+            <ArrowLeft size={18} />
+            Back to bookings
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] px-4 py-6 text-white sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1450px]">
-        {/* Breadcrumb */}
-        <div className="mb-6 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-          <button
-            type="button"
-            onClick={() => navigate("/admin")}
-            className="transition hover:text-[#D4AF37]"
+    <div className="min-h-screen bg-[#0b0b0b] px-4 py-8 text-white sm:px-6">
+      <div className="mx-auto max-w-6xl">
+        {/* Header */}
+        <div className="mb-8">
+          <Link
+            to="/admin/bookings"
+            className="mb-5 inline-flex items-center gap-2 text-gray-400 transition hover:text-[#D4AF37]"
           >
-            Dashboard
-          </button>
+            <ArrowLeft size={18} />
+            Return to Bookings
+          </Link>
 
-          <ChevronRight size={14} />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+                MaxiCabStar Prime
+              </p>
 
-          <button
-            type="button"
-            onClick={() => navigate("/admin/bookings")}
-            className="transition hover:text-[#D4AF37]"
-          >
-            Bookings
-          </button>
+              <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
+                Booking Details
+              </h1>
 
-          <ChevronRight size={14} />
-
-          <span className="text-[#D4AF37]">{booking.id}</span>
-        </div>
-
-        {/* Page header */}
-        <div className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
-          <div>
-            <button
-              type="button"
-              onClick={() => navigate("/admin/bookings")}
-              className="mb-5 inline-flex items-center gap-2 text-sm text-gray-400 transition hover:text-[#D4AF37]"
-            >
-              <ArrowLeft size={17} />
-              Back to Bookings
-            </button>
-
-            <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-[#D4AF37]">
-              <span className="h-px w-7 bg-[#D4AF37]" />
-              Reservation Details
+              <p className="mt-2 text-gray-400">
+                Reservation reference: MCB-{booking.id}
+              </p>
             </div>
 
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Booking <span className="text-[#D4AF37]">Details.</span>
-            </h1>
-
-            <p className="mt-2 text-sm text-gray-400">
-              Review the reservation, customer, and journey information.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusBadge status={booking.status} showIcon />
-
-            <span className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-medium text-gray-300">
-              {booking.id}
+            <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-2 text-sm text-[#D4AF37]">
+              {booking.status || "Pending"}
             </span>
           </div>
         </div>
 
-        {/* Success notice */}
-        {notice && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4 text-sm text-emerald-400">
-            <CheckCircle2 size={19} className="shrink-0" />
-            <div className="flex-1">{notice}</div>
-
-            <button
-              type="button"
-              onClick={() => setNotice("")}
-              aria-label="Dismiss notification"
-              className="text-emerald-400/70 hover:text-emerald-300"
-            >
-              <XCircle size={17} />
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_360px]">
-          {/* Main column */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+          {/* Main */}
           <div className="space-y-6">
-            {/* Journey details */}
-            <SectionCard
-              title="Journey Information"
-              subtitle="Pickup, destination, and travel schedule"
-              icon={Navigation}
-            >
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="rounded-xl border border-white/[0.06] bg-[#0B0B0B] p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
-                      <MapPin size={19} />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wider text-gray-500">
-                        Pickup Location
-                      </p>
-
-                      <p className="mt-2 break-words text-base font-medium text-white">
-                        {booking.pickup}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-white/[0.06] bg-[#0B0B0B] p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10 text-[#D4AF37]">
-                      <MapPin size={19} />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-wider text-gray-500">
-                        Destination
-                      </p>
-
-                      <p className="mt-2 break-words text-base font-medium text-white">
-                        {booking.destination}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <DetailItem
-                  icon={CalendarDays}
-                  label="Travel Date"
-                  value={formatDate(booking.date)}
-                />
-
-                <DetailItem
-                  icon={Clock3}
-                  label="Pickup Time"
-                  value={booking.time}
-                />
-
-                <DetailItem
-                  icon={Users}
-                  label="Passengers"
-                  value={`${booking.passengers} passengers`}
-                />
-              </div>
-            </SectionCard>
-
-            {/* Customer details */}
-            <SectionCard
-              title="Customer Information"
-              subtitle="Contact details associated with this reservation"
-              icon={UserRound}
-            >
-              <div className="mb-6 flex flex-col gap-4 border-b border-white/[0.07] pb-6 sm:flex-row sm:items-center">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-xl font-semibold text-[#D4AF37]">
-                  {booking.customer
-                    .split(" ")
-                    .map((part) => part[0])
-                    .join("")
-                    .slice(0, 2)}
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-white">
-                    {booking.customer}
-                  </h3>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Customer reservation
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <DetailItem
-                  icon={Mail}
-                  label="Email Address"
-                  value={booking.email}
-                />
-
-                <DetailItem
-                  icon={Phone}
-                  label="Phone Number"
-                  value={booking.phone}
-                />
-              </div>
-            </SectionCard>
-
-            {/* Vehicle details */}
-            <SectionCard
-              title="Vehicle Information"
-              subtitle="Vehicle and passenger requirements"
-              icon={CarFront}
-            >
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <DetailItem
-                  icon={CarFront}
-                  label="Selected Vehicle"
-                  value={booking.vehicle}
-                />
-
-                <DetailItem
-                  icon={Users}
-                  label="Passenger Capacity Requested"
-                  value={`${booking.passengers} passengers`}
-                />
-              </div>
-            </SectionCard>
-
-            {/* Booking reference */}
-            <SectionCard
-              title="Reservation Reference"
-              subtitle="Identification and booking summary"
-              icon={ShieldCheck}
-            >
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <DetailItem
-                  icon={FileText}
-                  label="Booking Reference"
-                  value={booking.id}
-                />
-
-                <DetailItem
-                  icon={CalendarDays}
-                  label="Scheduled Travel"
-                  value={`${formatDate(booking.date)} · ${booking.time}`}
-                />
-              </div>
-            </SectionCard>
-          </div>
-
-          {/* Right column */}
-          <aside className="space-y-6">
-            {/* Fare summary */}
-            <section className="overflow-hidden rounded-2xl border border-[#D4AF37]/20 bg-[#111111]">
-              <div className="border-b border-white/[0.07] p-5">
+            {/* Customer information */}
+            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
+              <div className="border-b border-white/10 p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]">
-                    <CreditCard size={19} />
-                  </div>
+                  <UserRound style={{ color: gold }} />
 
                   <div>
-                    <h2 className="font-semibold">Fare Summary</h2>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Booking fare information
+                    <h2 className="font-semibold">Customer Information</h2>
+                    <p className="text-sm text-gray-500">
+                      Contact details associated with this reservation
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-gray-500">
-                  Total Booking Fare
-                </p>
+              <div className="space-y-6 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-xl font-bold text-[#D4AF37]">
+                    {(booking.customer_name || "C")
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
 
-                <h3 className="mt-3 text-4xl font-semibold tracking-tight text-[#D4AF37]">
-                  S${Number(booking.amount || 0).toFixed(2)}
-                </h3>
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {booking.customer_name ||
+                        booking.full_name ||
+                        "Customer information unavailable"}
+                    </h3>
 
-                <p className="mt-2 text-xs text-gray-500">
-                  Currency: Singapore Dollar (SGD)
-                </p>
-
-                <div className="my-6 border-t border-dashed border-white/10" />
-
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-gray-400">Vehicle</span>
-                  <span className="text-right text-gray-200">
-                    {booking.vehicle}
-                  </span>
+                    <p className="text-sm text-gray-500">
+                      Customer ID: {booking.customer_id || "Not linked"}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3 text-sm">
-                  <span className="text-gray-400">Passengers</span>
-                  <span className="text-gray-200">{booking.passengers}</span>
-                </div>
+                <div className="grid gap-6 border-t border-white/10 pt-6 sm:grid-cols-2">
+                  <InfoItem
+                    icon={Mail}
+                    label="Email Address"
+                    value={booking.customer_email || booking.email}
+                  />
 
-                <div className="mt-4 flex items-center justify-between gap-3 text-sm">
-                  <span className="text-gray-400">Booking status</span>
-                  <StatusBadge status={booking.status} />
+                  <InfoItem
+                    icon={Phone}
+                    label="Phone Number"
+                    value={booking.customer_phone || booking.phone}
+                  />
                 </div>
               </div>
             </section>
 
-            {/* Status management */}
-            <section className="rounded-2xl border border-white/[0.07] bg-[#111111] p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]">
-                  <ShieldCheck size={19} />
+            {/* Journey */}
+            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
+              <div className="border-b border-white/10 p-5">
+                <div className="flex items-center gap-3">
+                  <MapPin style={{ color: gold }} />
+
+                  <div>
+                    <h2 className="font-semibold">Journey Information</h2>
+                    <p className="text-sm text-gray-500">
+                      Pickup and drop-off details
+                    </p>
+                  </div>
                 </div>
+              </div>
+
+              <div className="grid gap-6 p-6 sm:grid-cols-2">
+                <InfoItem
+                  icon={MapPin}
+                  label="Pickup Location"
+                  value={booking.pickup_location || booking.pickup}
+                />
+
+                <InfoItem
+                  icon={MapPin}
+                  label="Drop-off Location"
+                  value={booking.dropoff_location || booking.destination}
+                />
+
+                <InfoItem
+                  icon={CalendarDays}
+                  label="Travel Date"
+                  value={formatDate(
+                    booking.pickup_date || booking.travelDate
+                  )}
+                />
+
+                <InfoItem
+                  icon={Clock}
+                  label="Travel Time"
+                  value={formatTime(
+                    booking.pickup_time || booking.travelTime
+                  )}
+                />
+              </div>
+            </section>
+
+            {/* Vehicle */}
+            <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
+              <div className="border-b border-white/10 p-5">
+                <div className="flex items-center gap-3">
+                  <Car style={{ color: gold }} />
+
+                  <div>
+                    <h2 className="font-semibold">Vehicle Information</h2>
+                    <p className="text-sm text-gray-500">
+                      Vehicle and passenger requirements
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-6 p-6 sm:grid-cols-2">
+                <InfoItem
+                  icon={Car}
+                  label="Selected Vehicle"
+                  value={booking.vehicle_type || booking.vehicle}
+                />
+
+                <InfoItem
+                  icon={Users}
+                  label="Passengers"
+                  value={booking.passengers}
+                />
+
+                <InfoItem
+                  icon={Luggage}
+                  label="Luggage"
+                  value={booking.luggage}
+                />
+              </div>
+            </section>
+
+            {/* Requests */}
+            <section className="rounded-2xl border border-white/10 bg-[#111111] p-6">
+              <h2 className="mb-3 font-semibold">Special Requests</h2>
+
+              <p className="whitespace-pre-wrap text-gray-300">
+                {booking.special_requests ||
+                  booking.notes ||
+                  "No special requests"}
+              </p>
+            </section>
+          </div>
+
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            <section className="rounded-2xl border border-[#D4AF37]/20 bg-[#111111] p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <ShieldCheck style={{ color: gold }} />
 
                 <div>
                   <h2 className="font-semibold">Manage Booking</h2>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="text-sm text-gray-500">
                     Change reservation status
                   </p>
                 </div>
               </div>
 
-              <label
-                htmlFor="booking-status"
-                className="mt-6 block text-xs font-medium text-gray-400"
-              >
+              <label className="mb-2 block text-sm text-gray-400">
                 Booking Status
               </label>
 
               <select
-                id="booking-status"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-[#0B0B0B] px-4 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]/60"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-[#090909] px-4 py-3 text-white outline-none"
               >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
+                {["Pending", "Confirmed", "Completed", "Cancelled"].map(
+                  (item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  )
+                )}
               </select>
 
               <button
-                type="button"
-                onClick={() => setShowConfirmation(true)}
-                disabled={selectedStatus === booking.status}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#E6C65A] disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={updateStatus}
+                disabled={updating}
+                className="mt-4 w-full rounded-xl bg-[#D4AF37] px-4 py-3 font-semibold text-black transition hover:bg-[#e5c34e] disabled:opacity-50"
               >
-                <CheckCircle2 size={17} />
-                Update Status
+                {updating ? "Updating..." : "Update Status"}
               </button>
-
-              <p className="mt-3 text-center text-xs leading-5 text-gray-500">
-                Status changes are temporary in frontend demo mode.
-              </p>
             </section>
 
-            {/* Back button */}
-            <button
-              type="button"
-              onClick={() => navigate("/admin/bookings")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-medium text-gray-300 transition hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
-            >
-              <ArrowLeft size={17} />
-              Return to Bookings
-            </button>
+            <section className="rounded-2xl border border-white/10 bg-[#111111] p-6">
+              <h2 className="mb-4 font-semibold">Reservation Reference</h2>
+
+              <p className="text-sm text-gray-400">Booking ID</p>
+
+              <p className="mt-1 text-xl font-bold text-[#D4AF37]">
+                MCB-{booking.id}
+              </p>
+
+              <p className="mt-4 text-sm text-gray-400">Created At</p>
+
+              <p className="mt-1 text-sm text-white">
+                {booking.created_at
+                  ? new Date(booking.created_at).toLocaleString("en-SG")
+                  : "Not available"}
+              </p>
+            </section>
           </aside>
         </div>
       </div>
-
-      {/* Status confirmation dialog */}
-      {showConfirmation && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
-          onClick={() => setShowConfirmation(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="confirm-title"
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#151515] p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#D4AF37]">
-              <ShieldCheck size={23} />
-            </div>
-
-            <h2 id="confirm-title" className="mt-5 text-xl font-semibold">
-              Confirm Status Update
-            </h2>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              Change booking{" "}
-              <span className="font-medium text-white">{booking.id}</span>{" "}
-              from{" "}
-              <span className="font-medium text-white">{booking.status}</span>{" "}
-              to{" "}
-              <span className="font-medium text-[#D4AF37]">
-                {selectedStatus}
-              </span>
-              ?
-            </p>
-
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setShowConfirmation(false)}
-                className="rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/5"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleStatusUpdate}
-                className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#E6C65A]"
-              >
-                Confirm Update
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
