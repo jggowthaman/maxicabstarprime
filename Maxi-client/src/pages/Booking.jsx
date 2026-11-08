@@ -1,14 +1,13 @@
 
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowUpRight,
   CalendarDays,
   CarFront,
-  CheckCircle2,
-  Clock3,
+  Clock,
   Luggage,
   Mail,
   MapPin,
@@ -16,22 +15,19 @@ import {
   Plane,
   Route,
   ShieldCheck,
-  Users
+  Users,
 } from "lucide-react";
 
-// IMPORTANT:
-// Enter the actual company WhatsApp number with country code.
-// Singapore format: 65XXXXXXXX
-// Use digits only. Do not include +, spaces, or hyphens.
-const WHATSAPP_NUMBER = "9944817224";
+import api from "../api/axios";
+
+const WHATSAPP_NUMBER = "6598669334";
 
 const vehicleOptions = [
   "4 Seater",
-  "Luxury MPV",
-  "7 Seater Maxi Cab",
-  "13 Seater VIP Combo",
-  "23 Seater Minibus",
-  "49 Seater Bus",
+  "6 Seater",
+  "13 Seater",
+  "23 Seater",
+  "49 Seater",
   "Other / Not Sure",
 ];
 
@@ -59,74 +55,81 @@ const initialForm = {
 };
 
 const inputClass =
-  "mt-2 w-full min-w-0 rounded-xl border border-[#DED5C5] bg-white px-4 py-3.5 text-sm text-[#171717] outline-none transition placeholder:text-[#999184] focus:border-[#B58A4A] focus:ring-2 focus:ring-[#D4AF37]/20";
+  "mt-2 w-full rounded-xl border border-[#DED5C5] bg-white px-4 py-3.5 text-sm text-[#171717] outline-none focus:border-[#B58A4A] focus:ring-2 focus:ring-[#D4AF37]/20";
 
 const labelClass =
   "flex items-center gap-2 text-sm font-semibold text-[#27241F]";
 
 export default function Booking() {
   const [searchParams] = useSearchParams();
-  const reduceMotion = useReducedMotion();
 
-  const [form, setForm] = useState(initialForm);
+  const vehicleFromUrl = searchParams.get("vehicle") || "";
+
+  const [form, setForm] = useState({
+    ...initialForm,
+    vehicle: vehicleFromUrl,
+  });
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const today = new Date();
+
   const localToday = new Date(
     today.getTime() - today.getTimezoneOffset() * 60000
   )
     .toISOString()
     .slice(0, 10);
 
-  // Automatically select the vehicle passed in the URL.
   useEffect(() => {
-    const vehicleFromUrl = searchParams.get("vehicle");
-
     if (vehicleFromUrl) {
-      setForm((current) => ({
-        ...current,
+      setForm((prev) => ({
+        ...prev,
         vehicle: vehicleFromUrl,
       }));
     }
-  }, [searchParams]);
+  }, [vehicleFromUrl]);
 
-  const updateField = (event) => {
-    const { name, value } = event.target;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    setForm((current) => ({
-      ...current,
+    setForm((prev) => ({
+      ...prev,
       [name]: value,
     }));
 
     setError("");
-    setSubmitted(false);
+    setSuccess("");
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setError("");
-    setSubmitted(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    // Validate the WhatsApp number.
-    // This catches placeholders, letters, spaces, and invalid lengths.
-    if (!/^\d{8,15}$/.test(WHATSAPP_NUMBER)) {
-      setError(
-        "The company WhatsApp number is not configured correctly. Please update WHATSAPP_NUMBER at the top of Booking.jsx."
-      );
+    if (loading) return;
+
+    setError("");
+    setSuccess("");
+
+    if (!form.vehicle) {
+      setError("Please select a vehicle.");
       return;
     }
 
     if (
-      !form.vehicle ||
+      !form.name.trim() ||
+      !form.phone.trim() ||
       !form.pickup.trim() ||
       !form.destination.trim() ||
       !form.travelDate ||
-      !form.travelTime ||
-      !form.name.trim() ||
-      !form.phone.trim()
+      !form.travelTime
     ) {
       setError("Please complete all required fields.");
+      return;
+    }
+
+    if (form.travelDate < localToday) {
+      setError("Please select a future date.");
       return;
     }
 
@@ -134,137 +137,134 @@ export default function Booking() {
       form.pickup.trim().toLowerCase() ===
       form.destination.trim().toLowerCase()
     ) {
-      setError("Pickup and destination must be different.");
-      return;
-    }
-
-    if (form.travelDate < localToday) {
-      setError("Please select today or a future travel date.");
-      return;
-    }
-
-    const selectedDateTime = new Date(
-      `${form.travelDate}T${form.travelTime}`
-    );
-
-    if (
-      form.travelDate === localToday &&
-      selectedDateTime.getTime() < Date.now()
-    ) {
-      setError("Please select a future pickup time.");
+      setError("Pickup and destination cannot be the same.");
       return;
     }
 
     const tripLabel =
-      tripOptions.find((item) => item.value === form.tripType)?.label ??
+      tripOptions.find((item) => item.value === form.tripType)?.label ||
       form.tripType;
 
-    const message = [
-      "Hello MaxiCabStar Prime!",
-      "I would like to enquire about a booking.",
-      "",
-      `Vehicle: ${form.vehicle}`,
-      `Trip type: ${tripLabel}`,
-      `Pickup location: ${form.pickup.trim()}`,
-      `Destination: ${form.destination.trim()}`,
-      `Travel date: ${form.travelDate}`,
-      `Pickup time: ${form.travelTime}`,
-      `Passengers: ${form.passengers}`,
-      `Luggage: ${form.luggage} bag(s)`,
-      `Name: ${form.name.trim()}`,
-      `Contact number: ${form.phone.trim()}`,
-      form.email.trim() ? `Email: ${form.email.trim()}` : "",
-      form.flightNumber.trim()
-        ? `Flight number: ${form.flightNumber.trim()}`
-        : "",
-      form.notes.trim()
-        ? `Additional requirements: ${form.notes.trim()}`
-        : "",
-      "",
-      "Please confirm vehicle availability and provide a quotation.",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const bookingData = {
+      vehicle: form.vehicle,
+      tripType: tripLabel,
+      pickup: form.pickup.trim(),
+      destination: form.destination.trim(),
+      travelDate: form.travelDate,
+      travelTime: form.travelTime,
+      passengers: Number(form.passengers),
+      luggage: Number(form.luggage),
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      flightNumber: form.flightNumber.trim(),
+      notes: form.notes.trim(),
+    };
 
-    // Open WhatsApp directly.
+    const whatsappMessage = `
+Hello MaxiCabStar Prime! I would like to enquire about a booking.
+
+Vehicle: ${bookingData.vehicle}
+Trip Type: ${bookingData.tripType}
+Pickup: ${bookingData.pickup}
+Destination: ${bookingData.destination}
+Date: ${bookingData.travelDate}
+Time: ${bookingData.travelTime}
+Passengers: ${bookingData.passengers}
+Luggage: ${bookingData.luggage}
+Name: ${bookingData.name}
+Phone: ${bookingData.phone}
+Email: ${bookingData.email || "N/A"}
+Flight Number: ${bookingData.flightNumber || "N/A"}
+Notes: ${bookingData.notes || "N/A"}
+`;
+
     const whatsappUrl =
       `https://wa.me/${WHATSAPP_NUMBER}?text=` +
-      encodeURIComponent(message);
+      encodeURIComponent(whatsappMessage);
 
-    window.location.href = whatsappUrl;
+    // Open tab immediately to avoid browser popup blocking
+    const whatsappWindow = window.open("about:blank", "_blank");
+
+    try {
+      setLoading(true);
+
+      // Save booking to backend database first
+      const response = await api.post("/bookings", bookingData);
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message || "Booking could not be saved."
+        );
+      }
+
+      // Reset form after successful database save
+      setForm({
+        ...initialForm,
+        vehicle: vehicleFromUrl,
+      });
+
+      setSuccess("Booking saved successfully! Opening WhatsApp...");
+
+      // Open WhatsApp after successful save
+      if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.location.href = whatsappUrl;
+      }
+    } catch (err) {
+      console.error("Booking API error:", err);
+
+      if (whatsappWindow) {
+        whatsappWindow.close();
+      }
+
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Booking could not be saved. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const reveal = reduceMotion
-    ? {}
-    : {
-        initial: { opacity: 0, y: 22 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, amount: 0.12 },
-        transition: { duration: 0.6, ease: "easeOut" },
-      };
-
   return (
-    <main className="min-h-screen overflow-hidden bg-[#F8F4EE]">
-      {/* Booking page hero */}
-      <section className="relative overflow-hidden bg-[#0B0B0B] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-[#D4AF37]/15"
-        />
-
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-10 -top-10 h-52 w-52 rounded-full border border-[#D4AF37]/10"
-        />
-
-        <motion.div {...reveal} className="relative mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#F8F4EE]">
+      {/* Hero */}
+      <section className="bg-[#0B0B0B] px-5 py-16 text-white sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-6xl">
           <Link
             to="/"
-            className="mb-8 inline-flex items-center gap-2 text-sm text-white/65 transition hover:text-[#D4AF37]"
+            className="mb-7 inline-flex items-center gap-2 text-sm text-white/70 hover:text-[#D4AF37]"
           >
             <ArrowLeft size={17} />
             Back to Home
           </Link>
 
-          <div className="max-w-3xl">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
-              MaxiCabStar Prime · Singapore
-            </p>
+          <p className="mb-3 text-xs uppercase tracking-[0.25em] text-[#D4AF37]">
+            MaxiCabStar Prime · Singapore
+          </p>
 
-            <h1 className="font-['Cormorant_Garamond'] text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-7xl">
-              Book Your
-              <span className="block text-[#D4AF37]">
-                Perfect Ride.
-              </span>
-            </h1>
+          <h1 className="font-['Cormorant_Garamond'] text-4xl font-semibold sm:text-6xl">
+            Book Your <span className="text-[#D4AF37]">Perfect Ride</span>
+          </h1>
 
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-white/65 sm:text-base sm:leading-8">
-              Select your vehicle and tell us about your journey. Send
-              your booking enquiry directly to our team through WhatsApp.
-            </p>
-
-            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-xs text-white/75 sm:text-sm">
-              <span className="flex items-center gap-2">
-                <ShieldCheck size={17} className="text-[#D4AF37]" />
-                Simple booking enquiry
-              </span>
-
-              <span className="flex items-center gap-2">
-                <CarFront size={18} className="text-[#D4AF37]" />
-                Multiple vehicle options
-              </span>
-            </div>
-          </div>
-        </motion.div>
+          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
+            Complete your booking enquiry. Your details will be saved to our
+            booking system and sent to our team through WhatsApp.
+          </p>
+        </div>
       </section>
 
-      {/* Booking form */}
-      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
+      {/* Booking Form */}
+      <section className="px-4 py-12 sm:px-6 sm:py-16">
         <motion.div
-          {...reveal}
-          className="mx-auto max-w-5xl overflow-hidden rounded-3xl border border-[#E5DACA] bg-white shadow-[0_20px_70px_rgba(45,35,15,0.08)]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto max-w-5xl overflow-hidden rounded-3xl border border-[#E5DACA] bg-white shadow-xl"
         >
-          <div className="border-b border-[#E9E0D0] px-5 py-6 sm:px-9 sm:py-8">
+          <div className="border-b border-[#E9E0D0] p-6 sm:p-9">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A77D19]">
               Booking Details
             </p>
@@ -272,35 +272,31 @@ export default function Booking() {
             <h2 className="mt-2 font-['Cormorant_Garamond'] text-3xl font-semibold text-[#171717] sm:text-4xl">
               Tell Us About Your Journey
             </h2>
-
-            <p className="mt-2 text-sm leading-6 text-[#777064]">
-              Complete the required fields to prepare your booking enquiry.
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8 p-5 sm:p-8 lg:p-9">
-            {/* Vehicle and trip type */}
-            <div>
-              <h3 className="mb-4 font-['Cormorant_Garamond'] text-2xl font-semibold text-[#171717]">
+          <form onSubmit={handleSubmit} className="space-y-8 p-5 sm:p-9">
+            {/* Vehicle */}
+            <section>
+              <h3 className="mb-5 font-['Cormorant_Garamond'] text-2xl font-semibold">
                 01. Choose Your Ride
               </h3>
 
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="vehicle" className={labelClass}>
+                  <label className={labelClass} htmlFor="vehicle">
                     <CarFront size={17} className="text-[#A77D19]" />
-                    Vehicle Type *
+                    Vehicle *
                   </label>
 
                   <select
                     id="vehicle"
                     name="vehicle"
                     value={form.vehicle}
-                    onChange={updateField}
+                    onChange={handleChange}
                     className={inputClass}
                     required
                   >
-                    <option value="">Select a vehicle</option>
+                    <option value="">Select vehicle</option>
 
                     {vehicleOptions.map((vehicle) => (
                       <option key={vehicle} value={vehicle}>
@@ -308,8 +304,8 @@ export default function Booking() {
                       </option>
                     ))}
 
-                    {form.vehicle &&
-                      !vehicleOptions.includes(form.vehicle) && (
+                    {!vehicleOptions.includes(form.vehicle) &&
+                      form.vehicle && (
                         <option value={form.vehicle}>
                           {form.vehicle}
                         </option>
@@ -318,7 +314,7 @@ export default function Booking() {
                 </div>
 
                 <div>
-                  <label htmlFor="tripType" className={labelClass}>
+                  <label className={labelClass} htmlFor="tripType">
                     <Route size={17} className="text-[#A77D19]" />
                     Trip Type *
                   </label>
@@ -327,29 +323,29 @@ export default function Booking() {
                     id="tripType"
                     name="tripType"
                     value={form.tripType}
-                    onChange={updateField}
+                    onChange={handleChange}
                     className={inputClass}
                     required
                   >
-                    {tripOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                    {tripOptions.map((trip) => (
+                      <option key={trip.value} value={trip.value}>
+                        {trip.label}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Journey details */}
-            <div className="border-t border-[#E9E0D0] pt-7">
-              <h3 className="mb-4 font-['Cormorant_Garamond'] text-2xl font-semibold text-[#171717]">
+            {/* Journey Details */}
+            <section className="border-t border-[#E9E0D0] pt-7">
+              <h3 className="mb-5 font-['Cormorant_Garamond'] text-2xl font-semibold">
                 02. Journey Details
               </h3>
 
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="pickup" className={labelClass}>
+                  <label className={labelClass} htmlFor="pickup">
                     <MapPin size={17} className="text-[#A77D19]" />
                     Pickup Location *
                   </label>
@@ -357,19 +353,16 @@ export default function Booking() {
                   <input
                     id="pickup"
                     name="pickup"
-                    type="text"
-                    placeholder="e.g. Changi Airport Terminal 3"
                     value={form.pickup}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="Pickup address"
                     className={inputClass}
-                    autoComplete="street-address"
-                    maxLength={180}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="destination" className={labelClass}>
+                  <label className={labelClass} htmlFor="destination">
                     <MapPin size={17} className="text-[#A77D19]" />
                     Destination *
                   </label>
@@ -377,18 +370,16 @@ export default function Booking() {
                   <input
                     id="destination"
                     name="destination"
-                    type="text"
-                    placeholder="e.g. Marina Bay Sands"
                     value={form.destination}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="Destination address"
                     className={inputClass}
-                    maxLength={180}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="travelDate" className={labelClass}>
+                  <label className={labelClass} htmlFor="travelDate">
                     <CalendarDays size={17} className="text-[#A77D19]" />
                     Travel Date *
                   </label>
@@ -399,16 +390,16 @@ export default function Booking() {
                     type="date"
                     min={localToday}
                     value={form.travelDate}
-                    onChange={updateField}
+                    onChange={handleChange}
                     className={inputClass}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="travelTime" className={labelClass}>
-                    <Clock3 size={17} className="text-[#A77D19]" />
-                    Pickup Time *
+                  <label className={labelClass} htmlFor="travelTime">
+                    <Clock size={17} className="text-[#A77D19]" />
+                    Travel Time *
                   </label>
 
                   <input
@@ -416,30 +407,29 @@ export default function Booking() {
                     name="travelTime"
                     type="time"
                     value={form.travelTime}
-                    onChange={updateField}
+                    onChange={handleChange}
                     className={inputClass}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="passengers" className={labelClass}>
+                  <label className={labelClass} htmlFor="passengers">
                     <Users size={17} className="text-[#A77D19]" />
-                    Passengers *
+                    Passengers
                   </label>
 
                   <select
                     id="passengers"
                     name="passengers"
                     value={form.passengers}
-                    onChange={updateField}
+                    onChange={handleChange}
                     className={inputClass}
-                    required
                   >
-                    {Array.from({ length: 49 }, (_, index) => index + 1).map(
-                      (count) => (
-                        <option key={count} value={String(count)}>
-                          {count} {count === 1 ? "Passenger" : "Passengers"}
+                    {Array.from({ length: 49 }, (_, i) => i + 1).map(
+                      (n) => (
+                        <option key={n} value={n}>
+                          {n} Passenger{n > 1 ? "s" : ""}
                         </option>
                       )
                     )}
@@ -447,30 +437,28 @@ export default function Booking() {
                 </div>
 
                 <div>
-                  <label htmlFor="luggage" className={labelClass}>
+                  <label className={labelClass} htmlFor="luggage">
                     <Luggage size={17} className="text-[#A77D19]" />
-                    Number of Bags
+                    Luggage
                   </label>
 
                   <select
                     id="luggage"
                     name="luggage"
                     value={form.luggage}
-                    onChange={updateField}
+                    onChange={handleChange}
                     className={inputClass}
                   >
-                    {Array.from({ length: 21 }, (_, index) => index).map(
-                      (count) => (
-                        <option key={count} value={String(count)}>
-                          {count} {count === 1 ? "Bag" : "Bags"}
-                        </option>
-                      )
-                    )}
+                    {Array.from({ length: 21 }, (_, i) => i).map((n) => (
+                      <option key={n} value={n}>
+                        {n} Bag{n !== 1 ? "s" : ""}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label htmlFor="flightNumber" className={labelClass}>
+                <div className="sm:col-span-2">
+                  <label className={labelClass} htmlFor="flightNumber">
                     <Plane size={17} className="text-[#A77D19]" />
                     Flight Number (optional)
                   </label>
@@ -478,144 +466,125 @@ export default function Booking() {
                   <input
                     id="flightNumber"
                     name="flightNumber"
-                    type="text"
-                    placeholder="e.g. SQ321"
                     value={form.flightNumber}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="e.g. SQ321"
                     className={inputClass}
-                    maxLength={30}
                   />
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Contact details */}
-            <div className="border-t border-[#E9E0D0] pt-7">
-              <h3 className="mb-2 font-['Cormorant_Garamond'] text-2xl font-semibold text-[#171717]">
-                03. Your Contact Details
+            {/* Contact Details */}
+            <section className="border-t border-[#E9E0D0] pt-7">
+              <h3 className="mb-5 font-['Cormorant_Garamond'] text-2xl font-semibold">
+                03. Contact Details
               </h3>
 
-              <p className="mb-5 text-sm text-[#777064]">
-                Provide your contact information so the team can reply.
-              </p>
-
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className={labelClass}>
+                  <label className={labelClass} htmlFor="name">
                     Full Name *
                   </label>
 
                   <input
                     id="name"
                     name="name"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Enter your full name"
                     value={form.name}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="Your full name"
                     className={inputClass}
-                    maxLength={100}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className={labelClass}>
-                    Contact Number *
+                  <label className={labelClass} htmlFor="phone">
+                    Phone Number *
                   </label>
 
                   <input
                     id="phone"
                     name="phone"
                     type="tel"
-                    autoComplete="tel"
-                    placeholder="Enter your phone number"
                     value={form.phone}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="Phone number"
                     className={inputClass}
-                    maxLength={30}
                     required
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label htmlFor="email" className={labelClass}>
+                <div className="sm:col-span-2">
+                  <label className={labelClass} htmlFor="email">
                     <Mail size={17} className="text-[#A77D19]" />
-                    Email Address (optional)
+                    Email (optional)
                   </label>
 
                   <input
                     id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
                     value={form.email}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="Email address"
                     className={inputClass}
-                    maxLength={150}
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label htmlFor="notes" className={labelClass}>
-                    Additional Requirements (optional)
+                <div className="sm:col-span-2">
+                  <label className={labelClass} htmlFor="notes">
+                    Additional Requirements
                   </label>
 
                   <textarea
                     id="notes"
                     name="notes"
                     rows={4}
-                    placeholder="Extra stops, child seats, or other requests..."
                     value={form.notes}
-                    onChange={updateField}
+                    onChange={handleChange}
+                    placeholder="Any additional requests..."
                     className={`${inputClass} resize-y`}
-                    maxLength={1000}
                   />
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Validation messages */}
+            {/* Messages */}
             {error && (
-              <p
-                role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700"
-              >
+              <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
                 {error}
-              </p>
+              </div>
             )}
 
-            {submitted && (
-              <p
-                role="status"
-                className="flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm leading-6 text-green-800"
-              >
-                <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
-                WhatsApp opened. Review your booking message and press Send
-                in WhatsApp to submit your enquiry.
-              </p>
+            {success && (
+              <div className="rounded-xl bg-green-50 p-4 text-sm text-green-700">
+                {success}
+              </div>
             )}
 
             {/* Submit */}
             <div className="border-t border-[#E9E0D0] pt-7">
               <button
                 type="submit"
-                className="inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-[#D4AF37] px-6 py-4 text-sm font-bold text-[#0B0B0B] shadow-lg shadow-[#D4AF37]/15 transition hover:-translate-y-0.5 hover:bg-[#E8C95D] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#A77D19] sm:w-auto sm:min-w-[280px]"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-full bg-[#D4AF37] px-6 py-4 text-sm font-bold text-black transition hover:bg-[#E8C95D] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[280px]"
               >
                 <MessageCircle size={19} />
-                Send Booking Enquiry
-                <ArrowUpRight size={18} />
+
+                {loading ? "Saving Booking..." : "Submit Booking"}
+
+                {!loading && <ArrowUpRight size={18} />}
               </button>
 
-              <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[#777064]">
+              <p className="mt-4 flex gap-2 text-xs leading-6 text-[#777064]">
                 <ShieldCheck
                   size={16}
-                  className="mt-0.5 shrink-0 text-[#A77D19]"
+                  className="mt-1 shrink-0 text-[#A77D19]"
                 />
-                This form opens WhatsApp with your enquiry. Your ride is
-                not confirmed until the company confirms availability and
-                pricing.
+
+                Your booking enquiry is saved before WhatsApp opens.
+                Booking confirmation is subject to availability.
               </p>
             </div>
           </form>
