@@ -9,8 +9,7 @@ router.post("/login", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Accept either username or email
-    const loginId = (username || email || "").trim();
+    const loginId = String(username || email || "").trim();
 
     if (!loginId || !password) {
       return res.status(400).json({
@@ -19,7 +18,14 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Find admin by username OR email
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing");
+      return res.status(500).json({
+        success: false,
+        message: "Server configuration error",
+      });
+    }
+
     const [admins] = await pool.execute(
       `SELECT id, username, email, password
        FROM admins
@@ -28,7 +34,7 @@ router.post("/login", async (req, res) => {
       [loginId, loginId]
     );
 
-    if (admins.length === 0) {
+    if (!admins.length) {
       return res.status(401).json({
         success: false,
         message: "Invalid admin ID or password",
@@ -37,24 +43,26 @@ router.post("/login", async (req, res) => {
 
     const admin = admins[0];
 
-    // Compare entered password with hashed password
-    const isPasswordValid = await bcrypt.compare(
+    if (!admin.password) {
+      console.error("Admin record has no password hash");
+      return res.status(500).json({
+        success: false,
+        message: "Admin account configuration error",
+      });
+    }
+
+    const validPassword = await bcrypt.compare(
       password,
       admin.password
     );
 
-    if (!isPasswordValid) {
+    if (!validPassword) {
       return res.status(401).json({
         success: false,
         message: "Invalid admin ID or password",
       });
     }
 
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET is missing in .env");
-    }
-
-    // Generate JWT
     const token = jwt.sign(
       {
         id: admin.id,
@@ -76,7 +84,9 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Admin login error:", error);
+    // Actual error appears in Hostinger backend logs
+    console.error("Admin login error:", error.message);
+    console.error(error.stack);
 
     return res.status(500).json({
       success: false,
