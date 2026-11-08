@@ -22,7 +22,7 @@ import vehicle6 from "../../assets/6 seater.jpg";
 const vehicles = [
   {
     id: 1,
-    name: "13 Seater VIP Combo",
+    name: "13 Seater VIP Combi",
     image: vehicle1,
     seats: 13,
     passengers: 13,
