@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
@@ -86,7 +85,6 @@ export default function Customers() {
       setError("");
 
       const response = await api.get("/customers");
-
       const customerData = response.data?.customers;
 
       if (!Array.isArray(customerData)) {
@@ -189,7 +187,10 @@ export default function Customers() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-[#0B0B0B] text-white">
         <div className="text-center">
-          <RefreshCw className="mx-auto animate-spin text-[#D4AF37]" size={30} />
+          <RefreshCw
+            className="mx-auto animate-spin text-[#D4AF37]"
+            size={30}
+          />
           <p className="mt-4 text-sm text-gray-400">
             Loading customer enquiries...
           </p>
@@ -637,10 +638,19 @@ export default function Customers() {
                 </div>
               </div>
 
+              {/* Email and Call buttons */}
               <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {selectedCustomer.email && (
                   <a
-                    href={`mailto:${selectedCustomer.email}`}
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                      selectedCustomer.email.trim()
+                    )}&su=${encodeURIComponent(
+                      `Re: ${selectedCustomer.subject || "Website Enquiry"}`
+                    )}&body=${encodeURIComponent(
+                      `Hi ${selectedCustomer.name || "there"},\n\n\nRegards,\nMaxiCabStar Prime`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/30 px-4 py-3 text-sm font-medium text-[#D4AF37] transition hover:bg-[#D4AF37]/10"
                   >
                     <Mail size={16} />
@@ -650,8 +660,9 @@ export default function Customers() {
 
                 {selectedCustomer.phone && (
                   <a
-                    href={`tel:${selectedCustomer.phone}`}
+                    href={`tel:${String(selectedCustomer.phone).replace(/[^\d+]/g, "")}`}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#E6C65A]"
+                    title="Open your default calling app"
                   >
                     <Phone size={16} />
                     Call Customer
