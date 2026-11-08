@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -64,11 +63,7 @@ const formatTime = (time) => {
   });
 };
 
-// Extract customer information from special_requests.
-// Home2.jsx currently saves details in this format:
-// Customer name: ...
-// Customer phone: ...
-// Customer email: ...
+/* CUSTOMER DETAILS */
 const getCustomerDetails = (booking) => {
   const notes = booking.special_requests || "";
 
@@ -76,20 +71,39 @@ const getCustomerDetails = (booking) => {
     const line = notes
       .split("\n")
       .find((item) =>
-        item.toLowerCase().startsWith(`${label.toLowerCase()}:`)
+        item.trim().toLowerCase().startsWith(`${label.toLowerCase()}:`)
       );
 
-    return line ? line.substring(label.length + 1).trim() : "";
+    return line ? line.substring(line.indexOf(":") + 1).trim() : "";
   };
 
   return {
-    name: getValue("Customer name") || `Customer #${booking.customer_id ?? "N/A"}`,
-    phone: getValue("Customer phone") || "Phone not provided",
-    email: getValue("Customer email") || "",
-    tripType: getValue("Trip type") || "",
+    name:
+      booking.customer_name ||
+      booking.full_name ||
+      booking.name ||
+      getValue("Customer name") ||
+      (booking.customer_id != null
+        ? `Customer #${booking.customer_id}`
+        : "Customer name unavailable"),
+
+    phone:
+      booking.customer_phone ||
+      booking.phone ||
+      getValue("Customer phone") ||
+      "Phone not provided",
+
+    email:
+      booking.customer_email ||
+      booking.email ||
+      getValue("Customer email") ||
+      "",
+
+    tripType: booking.trip_type || getValue("Trip type") || "",
   };
 };
 
+/* STATUS NORMALIZATION */
 const normalizeStatus = (status) => {
   const value = String(status || "Pending").toLowerCase();
 
@@ -103,30 +117,50 @@ const normalizeStatus = (status) => {
   );
 };
 
+/* BOOKING NORMALIZATION */
 const normalizeBooking = (booking) => {
   const customer = getCustomerDetails(booking);
 
   return {
     ...booking,
+
     id: booking.id,
-    customer: customer.name,
-    phone: customer.phone,
-    email: customer.email,
-    tripType: customer.tripType,
+
+    customer: String(
+      customer.name || "Customer name unavailable"
+    ),
+
+    phone: String(
+      customer.phone || "Phone not provided"
+    ),
+
+    email: String(customer.email || ""),
+
+    tripType: String(customer.tripType || ""),
+
     pickup: booking.pickup_location || "—",
+
     destination: booking.dropoff_location || "—",
+
     date: booking.pickup_date
       ? String(booking.pickup_date).slice(0, 10)
       : "",
+
     time: booking.pickup_time,
+
     vehicle: booking.vehicle_type || "Not specified",
+
     passengers: Number(booking.passengers) || 1,
+
     luggage: booking.luggage || "Not specified",
+
     amount: Number(booking.amount || 0),
+
     status: normalizeStatus(booking.status),
   };
 };
 
+/* STAT CARD */
 function BookingStat({ title, value, icon: Icon, description }) {
   return (
     <div className="group rounded-2xl border border-white/[0.07] bg-[#111111] p-5 transition duration-300 hover:border-[#D4AF37]/40">
@@ -147,6 +181,7 @@ function BookingStat({ title, value, icon: Icon, description }) {
   );
 }
 
+/* MAIN BOOKINGS PAGE */
 export default function Bookings() {
   const navigate = useNavigate();
 
@@ -174,6 +209,7 @@ export default function Bookings() {
     };
   };
 
+  /* FETCH BOOKINGS */
   const fetchBookings = useCallback(async (showRefresh = false) => {
     try {
       setError("");
@@ -184,7 +220,10 @@ export default function Bookings() {
         setLoading(true);
       }
 
-      const response = await api.get("/bookings", getAuthConfig());
+      const response = await api.get(
+        "/bookings",
+        getAuthConfig()
+      );
 
       const data = response.data?.bookings || [];
 
@@ -193,7 +232,9 @@ export default function Bookings() {
       console.error("Fetch bookings error:", err);
 
       if (err.response?.status === 401) {
-        setError("Your admin session has expired. Please log in again.");
+        setError(
+          "Your admin session has expired. Please log in again."
+        );
       } else {
         setError(
           err.response?.data?.message ||
@@ -210,6 +251,7 @@ export default function Bookings() {
     fetchBookings();
   }, [fetchBookings]);
 
+  /* SEARCH AND FILTER */
   const filteredBookings = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -225,14 +267,17 @@ export default function Bookings() {
         booking.vehicle.toLowerCase().includes(query);
 
       const matchesStatus =
-        activeFilter === "All" || booking.status === activeFilter;
+        activeFilter === "All" ||
+        booking.status === activeFilter;
 
-      const matchesDate = !dateFilter || booking.date === dateFilter;
+      const matchesDate =
+        !dateFilter || booking.date === dateFilter;
 
       return matchesSearch && matchesStatus && matchesDate;
     });
   }, [bookings, search, activeFilter, dateFilter]);
 
+  /* PAGINATION */
   const totalPages = Math.max(
     1,
     Math.ceil(filteredBookings.length / itemsPerPage)
@@ -245,6 +290,7 @@ export default function Bookings() {
     currentPage * itemsPerPage
   );
 
+  /* STATISTICS */
   const stats = [
     {
       title: "Total Bookings",
@@ -272,6 +318,7 @@ export default function Bookings() {
     },
   ];
 
+  /* UPDATE BOOKING STATUS */
   const changeStatus = async (bookingId, newStatus) => {
     try {
       setUpdatingId(bookingId);
@@ -284,7 +331,6 @@ export default function Bookings() {
         getAuthConfig()
       );
 
-      // Refresh from database after successful update.
       await fetchBookings(true);
     } catch (err) {
       console.error("Status update error:", err);
@@ -298,6 +344,7 @@ export default function Bookings() {
     }
   };
 
+  /* RESET FILTERS */
   const resetFilters = () => {
     setSearch("");
     setActiveFilter("All");
@@ -318,7 +365,8 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-[#0B0B0B] px-4 py-6 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1600px]">
-        {/* Page heading */}
+
+        {/* PAGE HEADING */}
         <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
@@ -361,7 +409,7 @@ export default function Bookings() {
           </div>
         </div>
 
-        {/* Error message */}
+        {/* ERROR */}
         {error && (
           <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300 sm:flex-row sm:items-center sm:justify-between">
             <span>{error}</span>
@@ -376,20 +424,24 @@ export default function Bookings() {
           </div>
         )}
 
-        {/* Statistics */}
+        {/* STATISTICS */}
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
             <BookingStat key={stat.title} {...stat} />
           ))}
         </div>
 
-        {/* Booking management */}
+        {/* BOOKING MANAGEMENT */}
         <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111111]">
-          {/* Table header */}
+
+          {/* TABLE HEADER */}
           <div className="border-b border-white/[0.07] p-5 sm:p-6">
             <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
               <div>
-                <h2 className="text-lg font-semibold">All Reservations</h2>
+                <h2 className="text-lg font-semibold">
+                  All Reservations
+                </h2>
+
                 <p className="mt-1 text-sm text-gray-500">
                   Review and manage customer trips.
                 </p>
@@ -432,7 +484,7 @@ export default function Bookings() {
               </div>
             </div>
 
-            {/* Status filters */}
+            {/* STATUS FILTERS */}
             <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-1">
               <SlidersHorizontal
                 size={17}
@@ -470,7 +522,7 @@ export default function Bookings() {
             </div>
           </div>
 
-          {/* Bookings table */}
+          {/* BOOKINGS TABLE */}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1050px] text-left">
               <thead>
@@ -502,6 +554,7 @@ export default function Bookings() {
                         size={25}
                         className="mx-auto animate-spin text-[#D4AF37]"
                       />
+
                       <p className="mt-4 text-sm text-gray-400">
                         Loading bookings...
                       </p>
@@ -513,14 +566,14 @@ export default function Bookings() {
                       key={booking.id}
                       className="transition hover:bg-white/[0.025]"
                     >
-                      {/* Booking ID */}
+                      {/* BOOKING ID */}
                       <td className="px-5 py-5">
                         <span className="text-sm font-semibold text-[#D4AF37]">
                           MCB-{booking.id}
                         </span>
                       </td>
 
-                      {/* Customer */}
+                      {/* CUSTOMER DETAILS */}
                       <td className="px-5 py-5">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-sm font-semibold text-[#D4AF37]">
@@ -535,6 +588,7 @@ export default function Bookings() {
                             <p className="whitespace-nowrap text-sm font-medium text-white">
                               {booking.customer}
                             </p>
+
                             <p className="mt-1 text-xs text-gray-500">
                               {booking.phone}
                             </p>
@@ -542,13 +596,14 @@ export default function Bookings() {
                         </div>
                       </td>
 
-                      {/* Journey */}
+                      {/* JOURNEY */}
                       <td className="px-5 py-5">
                         <div className="max-w-[220px] space-y-2">
                           <p className="flex items-start gap-2 text-xs text-gray-300">
                             <span className="mt-0.5 text-emerald-400">
                               <MapPin size={13} />
                             </span>
+
                             <span>{booking.pickup}</span>
                           </p>
 
@@ -556,25 +611,31 @@ export default function Bookings() {
                             <span className="mt-0.5 text-[#D4AF37]">
                               <MapPin size={13} />
                             </span>
+
                             <span>{booking.destination}</span>
                           </p>
                         </div>
                       </td>
 
-                      {/* Date */}
+                      {/* DATE */}
                       <td className="whitespace-nowrap px-5 py-5">
                         <p className="text-sm text-gray-200">
                           {formatDate(booking.date)}
                         </p>
+
                         <p className="mt-1 text-xs text-gray-500">
                           {formatTime(booking.time)}
                         </p>
                       </td>
 
-                      {/* Vehicle */}
+                      {/* VEHICLE */}
                       <td className="px-5 py-5">
                         <div className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-300">
-                          <CarFront size={17} className="text-[#D4AF37]" />
+                          <CarFront
+                            size={17}
+                            className="text-[#D4AF37]"
+                          />
+
                           {booking.vehicle}
                         </div>
 
@@ -583,7 +644,7 @@ export default function Bookings() {
                         </p>
                       </td>
 
-                      {/* Status */}
+                      {/* STATUS */}
                       <td className="px-5 py-5">
                         <div className="relative">
                           <button
@@ -591,7 +652,9 @@ export default function Bookings() {
                             disabled={updatingId === booking.id}
                             onClick={() =>
                               setStatusMenu(
-                                statusMenu === booking.id ? null : booking.id
+                                statusMenu === booking.id
+                                  ? null
+                                  : booking.id
                               )
                             }
                             aria-label={`Change status for booking ${booking.id}`}
@@ -601,6 +664,7 @@ export default function Bookings() {
                             } disabled:opacity-50`}
                           >
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
+
                             {updatingId === booking.id
                               ? "Updating..."
                               : booking.status}
@@ -631,7 +695,7 @@ export default function Bookings() {
                         </div>
                       </td>
 
-                      {/* Action */}
+                      {/* VIEW BOOKING */}
                       <td className="px-5 py-5">
                         <button
                           type="button"
@@ -650,6 +714,7 @@ export default function Bookings() {
                   ))
                 )}
 
+                {/* EMPTY STATE */}
                 {!loading && paginatedBookings.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-6 py-20 text-center">
@@ -683,7 +748,7 @@ export default function Bookings() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* PAGINATION */}
           {!loading && (
             <div className="flex flex-col justify-between gap-4 border-t border-white/[0.07] px-5 py-5 sm:flex-row sm:items-center sm:px-6">
               <p className="text-xs text-gray-500">
@@ -709,7 +774,9 @@ export default function Bookings() {
                 <button
                   type="button"
                   onClick={() =>
-                    setPage((previous) => Math.max(1, previous - 1))
+                    setPage((previous) =>
+                      Math.max(1, previous - 1)
+                    )
                   }
                   disabled={currentPage === 1}
                   aria-label="Previous page"

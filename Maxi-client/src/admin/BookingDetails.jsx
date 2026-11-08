@@ -16,7 +16,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import api from "../../api/axios";
+import api from "../api/axios";
 
 const gold = "#D4AF37";
 
