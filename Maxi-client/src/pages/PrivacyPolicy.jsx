@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, Lock, Eye, Database, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
-import SEO from "../../components/SEO";
+import SEO from "../components/SEO";
 
 const sections = [
   {

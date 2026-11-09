@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { FileText, ShieldCheck, Clock, CarFront } from "lucide-react";
 import { Link } from "react-router-dom";
-import SEO from "../../components/SEO";
+import SEO from "../components/SEO";
 
 const sections = [
   {
