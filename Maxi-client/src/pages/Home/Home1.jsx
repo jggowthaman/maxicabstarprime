@@ -24,7 +24,8 @@ const slides = [
     title: "Travel Beyond",
     highlight: "Ordinary.",
     description:
-      "Experience comfortable, reliable and refined journeys across Singapore with MaxiCabStar Prime.",
+      "Experience comfortable, reliable and refined maxicab services in Singapore with MaxiCabStar Prime.",
+    alt: "MaxiCabStar Prime premium maxicab service in Singapore",
   },
   {
     image: slide2,
@@ -32,7 +33,8 @@ const slides = [
     title: "Your Journey,",
     highlight: "Our Priority.",
     description:
-      "From airport transfers to business travel, enjoy a journey designed around your comfort.",
+      "From Singapore airport transfers to business travel, enjoy a comfortable private journey designed around your needs.",
+    alt: "Comfortable private airport transfer in Singapore",
   },
   {
     image: slide3,
@@ -40,7 +42,8 @@ const slides = [
     title: "Arrive in",
     highlight: "Exceptional Style.",
     description:
-      "Enjoy convenient private transport for individuals, families and groups.",
+      "Enjoy convenient private transportation in Singapore for individuals, families and groups.",
+    alt: "Private group transportation service in Singapore",
   },
   {
     image: slide4,
@@ -48,7 +51,8 @@ const slides = [
     title: "Every Mile,",
     highlight: "Made Better.",
     description:
-      "Discover a more relaxed way to travel with service focused on convenience and peace of mind.",
+      "Discover a more relaxed way to travel with MaxiCabStar Prime, with service focused on convenience and peace of mind.",
+    alt: "MaxiCabStar Prime private transport in Singapore",
   },
 ];
 
@@ -63,7 +67,7 @@ function SingaporeFlag() {
 
   return (
     <>
-      {/* Desktop flag */}
+      {/* Desktop Singapore Flag */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -123,7 +127,7 @@ function SingaporeFlag() {
         </div>
       </motion.div>
 
-      {/* Compact flag for mobile */}
+      {/* Mobile Singapore Flag */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -146,6 +150,7 @@ function SingaporeFlag() {
                 d="M13 2 A9 9 0 1 0 13 19 A7 8 0 1 1 13 2"
                 fill="white"
               />
+
               {stars.map(([cx, cy], index) => (
                 <path
                   key={index}
@@ -192,8 +197,11 @@ export default function Home1() {
   const slide = slides[activeIndex];
 
   return (
-    <section className="relative flex h-[calc(100svh-74px)] min-h-[620px] max-h-[950px] items-center overflow-hidden bg-[#0B0B0B] sm:min-h-[700px]">
-      {/* Background carousel */}
+    <section
+      aria-label="MaxiCabStar Prime Singapore maxicab services"
+      className="relative flex h-[calc(100svh-74px)] min-h-[620px] max-h-[950px] items-center overflow-hidden bg-[#0B0B0B] sm:min-h-[700px]"
+    >
+      {/* Background Carousel */}
       <AnimatePresence mode="sync">
         <motion.div
           key={slide.image}
@@ -205,7 +213,12 @@ export default function Home1() {
         >
           <motion.img
             src={slide.image}
-            alt={`MaxiCabStar Prime - ${slide.eyebrow.toLowerCase()}`}
+            alt={slide.alt}
+            width="1920"
+            height="1080"
+            fetchPriority={activeIndex === 0 ? "high" : "auto"}
+            loading={activeIndex === 0 ? "eager" : "lazy"}
+            decoding="async"
             className="h-full w-full object-cover object-center"
             initial={reduceMotion ? false : { scale: 1.08 }}
             animate={{ scale: 1 }}
@@ -214,14 +227,14 @@ export default function Home1() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dark overlays for readable text */}
+      {/* Dark Overlays */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/20" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/25" />
 
-      {/* Singapore flag and label */}
+      {/* Singapore Flag */}
       <SingaporeFlag />
 
-      {/* Hero content */}
+      {/* Hero Content */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-20 pt-24 sm:px-10 sm:pb-16 lg:px-16">
         <AnimatePresence mode="wait">
           <motion.div
@@ -240,11 +253,23 @@ export default function Home1() {
               </p>
             </div>
 
+            {/* SEO H1 */}
             <h1 className="font-serif text-4xl font-medium leading-[1.08] tracking-tight text-[#F8F4EE] min-[380px]:text-5xl sm:text-7xl lg:text-8xl">
-              {slide.title}
-              <span className="mt-2 block text-[#D4AF37]">
-                {slide.highlight}
-              </span>
+              {activeIndex === 0 ? (
+                <>
+                  Maxicab Singapore
+                  <span className="mt-2 block text-[#D4AF37]">
+                    Travel Beyond Ordinary.
+                  </span>
+                </>
+              ) : (
+                <>
+                  {slide.title}
+                  <span className="mt-2 block text-[#D4AF37]">
+                    {slide.highlight}
+                  </span>
+                </>
+              )}
             </h1>
 
             <p className="mt-6 max-w-xl text-sm leading-7 text-white/75 sm:mt-8 sm:text-base sm:leading-8 lg:text-lg">
@@ -274,7 +299,7 @@ export default function Home1() {
         </AnimatePresence>
       </div>
 
-      {/* Carousel controls */}
+      {/* Carousel Controls */}
       <div className="absolute bottom-7 right-4 z-20 flex items-center gap-2 sm:bottom-10 sm:right-10 sm:gap-3 lg:right-16">
         <span className="mr-1 text-[11px] tracking-[0.15em] text-white/75 sm:mr-2 sm:text-xs sm:tracking-[0.2em]">
           <span className="text-[#D4AF37]">
@@ -303,7 +328,7 @@ export default function Home1() {
         </button>
       </div>
 
-      {/* Slide indicators */}
+      {/* Slide Indicators */}
       <div className="absolute bottom-9 left-5 z-20 flex gap-2 sm:bottom-12 sm:left-10 lg:left-16">
         {slides.map((item, index) => (
           <button
@@ -321,7 +346,7 @@ export default function Home1() {
         ))}
       </div>
 
-      {/* Scroll cue */}
+      {/* Scroll Cue */}
       <div className="absolute bottom-10 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-3 text-[9px] uppercase tracking-[0.3em] text-white/55 lg:flex">
         <span className="h-8 w-px bg-[#D4AF37]/70" />
         Discover More
