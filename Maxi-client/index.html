@@ -1,85 +1,128 @@
+
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
+    <!-- Primary SEO -->
+    <title>Maxicab Singapore | MaxiCabStar Prime - Airport Transfers</title>
 
-    <!-- SEO Title -->
-    <title>
-      MaxiCabStar Prime | Maxicab Singapore & Airport Transfers
-    </title>
-
-    <!-- SEO Description -->
     <meta
       name="description"
-      content="Book a reliable maxicab in Singapore with MaxiCabStar Prime. Enjoy airport transfers, spacious vehicles, group transportation and comfortable private rides."
+      content="Book a reliable maxicab in Singapore with MaxiCabStar Prime. Enjoy comfortable 7-seater and 9-seater rides, Changi Airport transfers, group transportation and private transfers."
     />
 
-    <!-- Search Engine Indexing -->
     <meta name="robots" content="index, follow" />
 
-    <!-- Canonical URL -->
     <link
       rel="canonical"
       href="https://maxicabstarprime.com/"
     />
 
-    <!-- Open Graph SEO -->
-    <meta
-      property="og:title"
-      content="MaxiCabStar Prime | Maxicab Singapore"
-    />
-
-    <meta
-      property="og:description"
-      content="Reliable Singapore maxicab services, airport transfers and group transportation with MaxiCabStar Prime."
-    />
-
-    <meta
-      property="og:url"
-      content="https://maxicabstarprime.com/"
-    />
-
-    <meta property="og:type" content="website" />
-
-    <meta
-      property="og:site_name"
-      content="MaxiCabStar Prime"
-    />
-
-    <!-- Twitter SEO -->
-    <meta name="twitter:card" content="summary_large_image" />
-
-    <meta
-      name="twitter:title"
-      content="MaxiCabStar Prime | Maxicab Singapore"
-    />
-
-    <meta
-      name="twitter:description"
-      content="Book Singapore maxicab services, airport transfers and private group rides."
-    />
-
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-
     <link
       rel="preconnect"
       href="https://fonts.gstatic.com"
       crossorigin
     />
-
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./public/logo-light.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MaxiCabStar Prime" />
+    <meta
+      property="og:title"
+      content="Maxicab Singapore | MaxiCabStar Prime"
+    />
+    <meta
+      property="og:description"
+      content="Reliable Singapore maxicab services, airport transfers and comfortable group transportation."
+    />
+    <meta
+      property="og:url"
+      content="https://maxicabstarprime.com/"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Maxicab Singapore | MaxiCabStar Prime"
+    />
+    <meta
+      name="twitter:description"
+      content="Book comfortable maxicab rides, airport transfers and group transportation in Singapore."
+    />
+
+    <!-- Google Analytics 4 -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-DL52RP9H0W"
+    ></script>
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      window.gtag = gtag;
+
+      gtag("js", new Date());
+
+      gtag("config", "G-DL52RP9H0W");
+    </script>
+
+    <!-- WhatsApp Click Tracking -->
+    <script>
+      document.addEventListener(
+        "click",
+        function (event) {
+          const target = event.target;
+
+          if (!(target instanceof Element)) return;
+
+          const link = target.closest("a[href]");
+
+          if (!link) return;
+
+          const href = link.href;
+
+          const isWhatsApp =
+            href.includes("wa.me") ||
+            href.includes("api.whatsapp.com") ||
+            href.includes("web.whatsapp.com");
+
+          if (!isWhatsApp) return;
+
+          if (typeof window.gtag !== "function") return;
+
+          const whatsappUrl = new URL(href);
+
+          window.gtag("event", "whatsapp_click", {
+            link_domain: whatsappUrl.hostname,
+            page_path: window.location.pathname,
+            link_text: (
+              link.innerText ||
+              link.getAttribute("aria-label") ||
+              "WhatsApp"
+            )
+              .trim()
+              .slice(0, 100),
+            button_location:
+              link.dataset.analyticsLocation || "not_specified",
+            transport_type: "beacon"
+          });
+        },
+        true
+      );
+    </script>
   </head>
 
   <body>
